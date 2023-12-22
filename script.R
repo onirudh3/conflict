@@ -9,6 +9,8 @@ library(gplots)
 library(plm) # Panel data analysis
 library(car)
 library(stargazer) # For latex tables
+library(fastDummies) # For dummy variables
+library(janitor)
 
 # Oil field data
 discoveries <- read.csv("Data/giant_fields_2018.csv")
@@ -123,21 +125,21 @@ result_data <- subset(result_data, select = -c(country_year))
 
 result_data <- result_data %>% relocate(year, .after = country)
 
+result_data$country <- as.character(result_data$country)
 
-# Linear model ------------------------------------------------------------
-
-reg1 <- lm(conflict_dummy ~ discovery_dummy + discovery_dummy_lag_5 + discovery_dummy_lag_10, result_data)
-summary(reg1)
-stargazer(reg1)
+sort(unique(result_data$country))
 
 
-# Fixed effects -----------------------------------------------------------
+# Time period indicator ---------------------------------------------------
 
-reg2 <- plm(conflict_dummy ~ discovery_dummy + discovery_dummy_lag_5 + 
-                discovery_dummy_lag_10 + factor(year) + factor(country), result_data,
-              model = "within", effect = "twoways", index = c("country", "year"))
-summary(reg2)
-stargazer(reg2)
+result_data <- result_data %>%
+  group_by(country) %>% 
+  mutate(period = row_number() - which(discovery_dummy == 1)[1], .after = discovery_dummy)
+
+result_data <- dummy_cols(result_data, select_columns = "period", ignore_na = T)
+
+result_data <- result_data %>% 
+  mutate_at(c(10:73), ~ replace_na(., 0))
 
 
 # Exploratory analysis ----------------------------------------------------
@@ -157,46 +159,29 @@ dx %>%
   theme_classic()
 
 
-# Parallel trends in neighboring countries --------------------------------
+# Linear model ------------------------------------------------------------
 
-# Somalia, Ethiopia (1 discovery in 2010)
-dx <- subset(result_data, country %in% c("Somalia", "Ethiopia"))
-dx %>% 
-  ggplot(aes(year, number_of_conflicts_started, color = country)) +
-  geom_line() +
-  geom_segment(aes(x = 2010, y = -0.5, xend = 2010, yend = 10), lty = 2, col = "black") +
-  geom_text(size = 5, x = 2010, y = 9, label = "Oil discovery in 2010 in Ethiopia", colour = "black") +
-  theme_classic(base_size = 20)
-
-# Kenya, Ethiopia (1 discovery in 2010)
-dx <- subset(result_data, country %in% c("Kenya", "Ethiopia"))
-dx %>% 
-  ggplot(aes(year, number_of_conflicts_started, color = country)) +
-  geom_line() +
-  geom_segment(aes(x = 2010, y = -0.5, xend = 2010, yend = 10), lty = 2, col = "black") +
-  geom_text(size = 5, x = 2010, y = 9, label = "Oil discovery in 2010 in Ethiopia", colour = "black") +
-  theme_classic(base_size = 20)
-
-# Zimbabwe, South Africa
-dx <- subset(result_data, country %in% c("Zimbabwe", "South Africa"))
-dx %>% 
-  ggplot(aes(year, number_of_conflicts_started, color = country)) +
-  geom_line() +
-  geom_segment(aes(x = 2019, y = -0.5, xend = 2019, yend = 10), lty = 2, col = "black") +
-  geom_text(size = 5, x = 2010, y = 9, label = "Oil discovery in 2019 in SA", colour = "black") +
-  theme_classic(base_size = 20)
+reg1 <- lm(conflict_dummy ~ discovery_dummy + discovery_dummy_lag_5 + discovery_dummy_lag_10, result_data)
+summary(reg1)
+stargazer(reg1)
 
 
 # Difference in difference ------------------------------------------------
 
-reg3 <- lm(conflict_dummy ~ factor(country) + factor(year) + discovery_dummy * year, result_data)
-summary(reg3)
-stargazer(reg3)
+result_data <- clean_names(result_data)
 
+pre_discovery <- names(result_data)[10:39]
+post_discovery <- names(result_data)[41:73]
 
-# Event study plot --------------------------------------------------------
+formula_str <- paste("conflict_dummy ~ factor(year) + factor(country) + discovery_dummy +", 
+                     paste(pre_discovery, collapse = " + "))
 
+formula_str <- paste(formula_str, 
+                       paste(post_discovery, collapse = " + "))
 
+formula <- as.formula(formula_str)
 
-
+reg2 <- plm(conflict_dummy ~ factor(year) + factor(country) + discovery_dummy + , result_data,
+            model = "within", effect = "twoways", index = c("country", "year"))
+summary(reg2)
 
