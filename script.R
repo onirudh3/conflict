@@ -180,12 +180,9 @@ stargazer(reg1)
 # Difference in difference ------------------------------------------------
 
 # It is a long formula
-pre_discovery <- names(result_data)[10:39]
-post_discovery <- names(result_data)[41:73]
+variables <- names(result_data)[10:73]
 formula_str <- paste("conflict_dummy ~ factor(year) + factor(country) + discovery_dummy +", 
-                     paste(pre_discovery, collapse = " + "))
-formula_str <- paste(formula_str, paste("+"))
-formula_str <- paste(formula_str, paste(post_discovery, collapse = " + "))
+                     paste(variables, collapse = " + "))
 formula <- as.formula(formula_str)
 
 # Regression
@@ -205,12 +202,26 @@ coefs <- data.frame(reg2[["coefficients"]])
 coefs$conf.low <- coefs$Estimate + c(-1) * coefs$Std..Error * qt(0.975, 42)
 coefs$conf.high <- coefs$Estimate + c(1) * coefs$Std..Error * qt(0.975, 42)
 
-# Plot
-interest <- c("lag6", "lag5", "lag4", "lag3", "lag2", "E", "lead1", "lead2", 
-              "lead3", "lead4", "lead5", "lead6")
-coefs <- subset(coefs, coefs$.rownames %in% interest)
-coefs$time <- c(seq(-6,-2,1),seq(0,6,1))
+# Some wrangling
+interest <- c("lag30", "lag29", "lag28", "lag27", "lag26", "lag25", "lag24", 
+              "lag23", "lag22", "lag21", "lag20", "lag19", "lag18", "lag17", 
+              "lag16", "lag15", "lag14", "lag13", "lag12", "lag11", "lag10", 
+              "lag9", "lag8", "lag7", "lag6", "lag5", "lag4", "lag3", "lag2",
+              "lag1", "lead0", "lead1", "lead2", "lead3", "lead4", "lead5", 
+              "lead6", "lead7", "lead8", "lead9", "lead10", "lead11", "lead12", 
+              "lead13", "lead14", "lead15", "lead16", "lead17", "lead18", 
+              "lead19", "lead20", "lead21", "lead22", "lead23", "lead24", 
+              "lead25", "lead26", "lead27", "lead28", "lead29", "lead30", 
+              "lead31", "lead32")
+coefs <- subset(coefs, rownames(coefs) %in% interest)
+coefs <- cbind(rownames(coefs), data.frame(coefs, row.names = NULL))
+coefs <- coefs %>% rename("coefficient" = "rownames(coefs)")
+coefs <- coefs %>%
+  mutate(coefficient =  factor(coefficient, levels = interest)) %>%
+  arrange(coefficient)  
+coefs$time <- c(seq(-30, 32, 1))
 
+# Plot
 ggplot(coefs, aes(time, Estimate))+
   geom_line() +
   geom_point()+
