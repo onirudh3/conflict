@@ -10,7 +10,8 @@ library(plm) # Panel data analysis
 library(car)
 library(stargazer) # For latex tables
 library(fastDummies) # For dummy variables
-library(janitor)
+library(broom)
+library(lmtest)
 
 # Oil field data
 discoveries <- read.csv("Data/giant_fields_2018.csv")
@@ -93,10 +94,13 @@ conflictsuniq <- conflictsuniq %>%
 
 # Merge to result_data
 result_data <- left_join(result_data, subset(conflictsuniq, 
-                                             select = c("country_year", "number_of_conflicts_started")), by = "country_year")
+                                             select = c("country_year", 
+                                                        "number_of_conflicts_started")), 
+                         by = "country_year")
 
 result_data <- result_data %>% 
-  mutate(number_of_conflicts_started = case_when(is.na(number_of_conflicts_started) ~ 0, T ~ number_of_conflicts_started))
+  mutate(number_of_conflicts_started = case_when(is.na(number_of_conflicts_started) ~ 0, 
+                                                 T ~ number_of_conflicts_started))
 
 result_data <- result_data %>% 
   distinct() # Remove duplicate rows
@@ -111,10 +115,12 @@ result_data <- result_data %>%
 
 # Lags for discoveries in the past 5 and 10 years
 result_data <- result_data %>% 
-  mutate(discovery_dummy_lag_5 = + rollapplyr(discovery_dummy > 0, 5, any, fill = NA), .after = discovery_dummy)
+  mutate(discovery_dummy_lag_5 = + rollapplyr(discovery_dummy > 0, 5, any, 
+                                              fill = NA), .after = discovery_dummy)
 
 result_data <- result_data %>% 
-  mutate(discovery_dummy_lag_10 = + rollapplyr(discovery_dummy > 0, 10, any, fill = NA), .after = discovery_dummy_lag_5)
+  mutate(discovery_dummy_lag_10 = + rollapplyr(discovery_dummy > 0, 10, any, 
+                                               fill = NA), .after = discovery_dummy_lag_5)
 
 
 # Remove rows before 1989 -------------------------------------------------
@@ -127,7 +133,7 @@ result_data <- result_data %>% relocate(year, .after = country)
 
 result_data$country <- as.character(result_data$country)
 
-sort(unique(result_data$country))
+# sort(unique(result_data$country))
 
 
 # Time period indicator ---------------------------------------------------
@@ -140,6 +146,10 @@ result_data <- dummy_cols(result_data, select_columns = "period", ignore_na = T)
 
 result_data <- result_data %>% 
   mutate_at(c(10:73), ~ replace_na(., 0))
+
+# Rename period columns for clarity
+colnames(result_data) <- str_replace(colnames(result_data), "period_-", "lag")
+colnames(result_data) <- str_replace(colnames(result_data), "period_", "lead")
 
 
 # Exploratory analysis ----------------------------------------------------
@@ -161,27 +171,48 @@ dx %>%
 
 # Linear model ------------------------------------------------------------
 
-reg1 <- lm(conflict_dummy ~ discovery_dummy + discovery_dummy_lag_5 + discovery_dummy_lag_10, result_data)
+reg1 <- lm(conflict_dummy ~ discovery_dummy + discovery_dummy_lag_5 + 
+             discovery_dummy_lag_10, result_data)
 summary(reg1)
 stargazer(reg1)
 
 
 # Difference in difference ------------------------------------------------
 
-result_data <- clean_names(result_data)
-
+# It is a long formula
 pre_discovery <- names(result_data)[10:39]
 post_discovery <- names(result_data)[41:73]
-
 formula_str <- paste("conflict_dummy ~ factor(year) + factor(country) + discovery_dummy +", 
                      paste(pre_discovery, collapse = " + "))
-
-formula_str <- paste(formula_str, 
-                       paste(post_discovery, collapse = " + "))
-
+formula_str <- paste(formula_str, paste("+"))
+formula_str <- paste(formula_str, paste(post_discovery, collapse = " + "))
 formula <- as.formula(formula_str)
 
-reg2 <- plm(conflict_dummy ~ factor(year) + factor(country) + discovery_dummy + , result_data,
-            model = "within", effect = "twoways", index = c("country", "year"))
+# Regression
+reg2 <- plm(formula, result_data, model = "within", effect = "twoways", 
+            index = c("country", "year"))
 summary(reg2)
 
+# Robust standard errors
+G <- length(unique(result_data$country))
+c <- G / (G - 1)
+robust_se <- coeftest(reg2, c * vcovHC(reg2, type = 'HC1', cluster = 'group'))
+reg2 <- summary(reg2)
+reg2$coefficients[, 2:4] <- robust_se[, 2:4]
+
+# Confidence intervals
+coefs <- data.frame(reg2[["coefficients"]])
+coefs$conf.low <- coefs$Estimate + c(-1) * coefs$Std..Error * qt(0.975, 42)
+coefs$conf.high <- coefs$Estimate + c(1) * coefs$Std..Error * qt(0.975, 42)
+
+# Plot
+interest <- c("lag6", "lag5", "lag4", "lag3", "lag2", "E", "lead1", "lead2", 
+              "lead3", "lead4", "lead5", "lead6")
+coefs <- subset(coefs, coefs$.rownames %in% interest)
+coefs$time <- c(seq(-6,-2,1),seq(0,6,1))
+
+ggplot(coefs, aes(time, Estimate))+
+  geom_line() +
+  geom_point()+
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  geom_hline(yintercept = 0, linetype = 2)
