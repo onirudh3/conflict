@@ -152,31 +152,6 @@ colnames(result_data) <- str_replace(colnames(result_data), "period_-", "lag")
 colnames(result_data) <- str_replace(colnames(result_data), "period_", "lead")
 
 
-# Exploratory analysis ----------------------------------------------------
-
-# Mean number of conflicts by year
-plotmeans(number_of_conflicts_started ~ year, data = result_data, n.label = F)
-
-# Total number of conflicts by year
-dx <- result_data %>% 
-  subset(sum_disc == 0)
-dx <- dx %>% 
-  group_by(year) %>% 
-  summarise(number_of_conflicts_started = sum(number_of_conflicts_started))
-dx %>% 
-  ggplot(aes(year, number_of_conflicts_started)) +
-  geom_line() +
-  theme_classic()
-
-
-# Linear model ------------------------------------------------------------
-
-reg1 <- lm(conflict_dummy ~ discovery_dummy + discovery_dummy_lag_5 + 
-             discovery_dummy_lag_10, result_data)
-summary(reg1)
-stargazer(reg1)
-
-
 # Difference in difference ------------------------------------------------
 
 # It is a long formula
