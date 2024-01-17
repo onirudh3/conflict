@@ -100,7 +100,16 @@ conflictsuniq <- conflictsuniq %>%
   group_by(country_year) %>% 
   mutate(number_of_conflicts_started = n())
 
-# Merge to result_data
+# Create different datasets for different type_of_violence (see other scripts)
+conflictsuniq_1 <- subset(conflictsuniq, type_of_violence == 1)
+conflictsuniq_2 <- subset(conflictsuniq, type_of_violence == 2)
+conflictsuniq_3 <- subset(conflictsuniq, type_of_violence == 3)
+
+
+# From this point, using all conflict types -------------------------------
+
+
+# Merge number_of_conflicts_started to result_data
 result_data <- left_join(result_data, subset(conflictsuniq, 
                                              select = c("country_year", 
                                                         "number_of_conflicts_started")), 
