@@ -1,6 +1,7 @@
 
 # Libraries and data ------------------------------------------------------
 
+# install.packages(plyr) # Install this package for computing counts
 library(tidyverse)
 library(readxl)
 library(geosphere)
@@ -12,6 +13,7 @@ library(stargazer) # For latex tables
 library(fastDummies) # Creating dummy variables
 library(broom)
 library(lmtest)
+library(did) # Difference-in-difference
 
 # Oil field data
 discoveries <- read.csv("Data/giant_fields_2018.csv")
@@ -68,6 +70,12 @@ conflictsuniq <- conflicts %>%
 result_data <- expand.grid(year = seq(1980, 2022, 1), 
                            country = unique(c(conflictsuniq$country, discoveries$COUNTRY)))
 
+# Numeric ID for each country
+result_data <- result_data %>%
+  group_by(country) %>%
+  mutate(country_ID = cur_group_id(),
+         .before = country)
+
 # Conflict dummy
 result_data$conflict_dummy <- 0
 result_data <- result_data %>% 
@@ -113,7 +121,10 @@ result_data <- result_data %>%
   group_by(country) %>% 
   mutate(total_discoveries = sum(discovery_dummy))
 
-# Lags for discoveries in the past 5 and 10 years
+# What are the countries where there are no discoveries?
+plyr::count(subset(result_data, total_discoveries == 0)$country) # 62 countries
+
+# Lag dummies for discoveries in the past 5 and 10 years
 result_data <- result_data %>% 
   mutate(discovery_dummy_lag_5 = + rollapplyr(discovery_dummy > 0, 5, any, 
                                               fill = NA), .after = discovery_dummy)
@@ -126,7 +137,7 @@ result_data <- result_data %>%
 # Remove rows before 1989 -------------------------------------------------
 
 result_data <- subset(result_data, year >= 1989)
-result_data <- subset(result_data, select = -c(country_year))
+# result_data <- subset(result_data, select = -c(country_year))
 result_data <- result_data %>% relocate(year, .after = country)
 result_data$country <- as.character(result_data$country)
 # sort(unique(result_data$country))
@@ -134,70 +145,44 @@ result_data$country <- as.character(result_data$country)
 
 # Time period indicator ---------------------------------------------------
 
+# Discovery period
 result_data <- result_data %>%
   group_by(country) %>% 
-  mutate(period = row_number() - which(discovery_dummy == 1)[1], .after = discovery_dummy)
+  mutate(period = row_number() - which(discovery_dummy == 1)[1],
+         .after = discovery_dummy)
 
+# Create dummies
 result_data <- dummy_cols(result_data, select_columns = "period", ignore_na = T)
 
 result_data <- result_data %>% 
   mutate_at(c(10:73), ~ replace_na(., 0))
 
+result_data <- result_data %>% 
+  group_by(country) %>%
+  mutate(first_discovery = `year`[period == 0],
+         .after = discovery_dummy)
+result_data <- result_data %>% 
+  mutate(first_discovery = case_when(is.na(first_discovery) ~ 0, T ~ first_discovery))
+
 # Rename period columns for clarity
 colnames(result_data) <- str_replace(colnames(result_data), "period_-", "lag")
 colnames(result_data) <- str_replace(colnames(result_data), "period_", "lead")
 
-# Drop unnecessary columns
-result_data <- result_data[, -c(10:73)]
-
 
 # Difference in difference ------------------------------------------------
 
-# It is a long formula
-variables <- names(result_data)[10:73]
-formula_str <- paste("conflict_dummy ~ factor(year) + factor(country) + discovery_dummy +", 
-                     paste(variables, collapse = " + "))
-formula <- as.formula(formula_str)
+## All types of violence ----
+out <- att_gt(yname = "number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              xformla = ~ 1,
+              data = result_data,
+              est_method = "reg")
+summary(out)
+ggdid(out) # Too many groups to see anything
 
-# Two-way fixed effects
-reg2 <- plm(formula, result_data, model = "within", effect = "twoways", 
-            index = c("country", "year"))
-summary(reg2)
-
-# Robust standard errors
-G <- length(unique(result_data$country))
-c <- G / (G - 1)
-robust_se <- coeftest(reg2, c * vcovHC(reg2, type = 'HC1', cluster = 'group'))
-reg2 <- summary(reg2)
-reg2$coefficients[, 2:4] <- robust_se[, 2:4]
-
-# Confidence intervals
-coefs <- data.frame(reg2[["coefficients"]])
-coefs$conf.low <- coefs$Estimate + c(-1) * coefs$Std..Error * qt(0.975, 42)
-coefs$conf.high <- coefs$Estimate + c(1) * coefs$Std..Error * qt(0.975, 42)
-
-# Some wrangling
-interest <- c("lag30", "lag29", "lag28", "lag27", "lag26", "lag25", "lag24", 
-              "lag23", "lag22", "lag21", "lag20", "lag19", "lag18", "lag17", 
-              "lag16", "lag15", "lag14", "lag13", "lag12", "lag11", "lag10", 
-              "lag9", "lag8", "lag7", "lag6", "lag5", "lag4", "lag3", "lag2",
-              "lag1", "lead0", "lead1", "lead2", "lead3", "lead4", "lead5", 
-              "lead6", "lead7", "lead8", "lead9", "lead10", "lead11", "lead12", 
-              "lead13", "lead14", "lead15", "lead16", "lead17", "lead18", 
-              "lead19", "lead20", "lead21", "lead22", "lead23", "lead24", 
-              "lead25", "lead26", "lead27", "lead28", "lead29", "lead30", 
-              "lead31", "lead32")
-coefs <- subset(coefs, rownames(coefs) %in% interest)
-coefs <- cbind(rownames(coefs), data.frame(coefs, row.names = NULL))
-coefs <- coefs %>% rename("coefficient" = "rownames(coefs)")
-coefs <- coefs %>%
-  mutate(coefficient =  factor(coefficient, levels = interest)) %>%
-  arrange(coefficient)  
-coefs$time <- c(seq(-30, 32, 1))
-
-# Plot
-ggplot(coefs, aes(time, Estimate))+
-  geom_line() +
-  geom_point()+
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  geom_hline(yintercept = 0, linetype = 2)
+# Dynamic event study
+es <- aggte(out, type = "dynamic", na.rm = T)
+summary(es)
+ggdid(es) # Event study plot shows no parallel trends
