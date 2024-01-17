@@ -159,7 +159,7 @@ formula_str <- paste("conflict_dummy ~ factor(year) + factor(country) + discover
                      paste(variables, collapse = " + "))
 formula <- as.formula(formula_str)
 
-# Regression
+# Two-way fixed effects
 reg2 <- plm(formula, result_data, model = "within", effect = "twoways", 
             index = c("country", "year"))
 summary(reg2)
