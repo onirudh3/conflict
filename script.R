@@ -9,7 +9,7 @@ library(gplots)
 library(plm) # Panel data analysis
 library(car)
 library(stargazer) # For latex tables
-library(fastDummies) # For dummy variables
+library(fastDummies) # Creating dummy variables
 library(broom)
 library(lmtest)
 
@@ -43,7 +43,7 @@ discoveries <-discoveries %>%
                              COUNTRY == "Equatorial Guinea" ~ "Guinea",
                              COUNTRY == "Congo (Brazzaville)" ~ "Congo",
                              COUNTRY == "Norway and United Kingdom" ~ "Norway",
-                             COUNTRY == "Divided Neutral Zone: Kuwait/Saudi Arabia" ~ "Kuwait",
+                             COUNTRY == "Divided Neutral Zone: Kuwait/Saudi Arabia" ~ "Kuwait", # for simplicity
                              TRUE ~ COUNTRY))
 conflicts <- conflicts %>% 
   mutate(country = case_when(country == "Russia (Soviet Union)" ~ "Russia",
@@ -111,7 +111,7 @@ result_data <- result_data %>%
 # Number of discoveries in a given country
 result_data <- result_data %>% 
   group_by(country) %>% 
-  mutate(sum_disc = sum(discovery_dummy))
+  mutate(total_discoveries = sum(discovery_dummy))
 
 # Lags for discoveries in the past 5 and 10 years
 result_data <- result_data %>% 
@@ -126,13 +126,9 @@ result_data <- result_data %>%
 # Remove rows before 1989 -------------------------------------------------
 
 result_data <- subset(result_data, year >= 1989)
-
 result_data <- subset(result_data, select = -c(country_year))
-
 result_data <- result_data %>% relocate(year, .after = country)
-
 result_data$country <- as.character(result_data$country)
-
 # sort(unique(result_data$country))
 
 
@@ -150,6 +146,9 @@ result_data <- result_data %>%
 # Rename period columns for clarity
 colnames(result_data) <- str_replace(colnames(result_data), "period_-", "lag")
 colnames(result_data) <- str_replace(colnames(result_data), "period_", "lead")
+
+# Drop unnecessary columns
+result_data <- result_data[, -c(10:73)]
 
 
 # Difference in difference ------------------------------------------------
