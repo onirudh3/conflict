@@ -69,7 +69,6 @@ colnames(result_data) <- str_replace(colnames(result_data), "period_", "lead")
 
 # Difference in difference ------------------------------------------------
 
-## All types of violence ----
 out <- att_gt(yname = "number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
