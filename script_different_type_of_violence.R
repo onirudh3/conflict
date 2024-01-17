@@ -1,5 +1,9 @@
+
+
+# Other types of violence -------------------------------------------------
+
 # Merge number_of_conflicts_started to result_data
-result_data <- left_join(result_data, subset(conflictsuniq_3, # choose conflictsuniq_1, conflictsuniq_2, or conflictsuniq_3
+result_data <- left_join(result_data, subset(conflictsuniq_1, # choose conflictsuniq_1, conflictsuniq_2, or conflictsuniq_3
                                              select = c("country_year", 
                                                         "number_of_conflicts_started")), 
                          by = "country_year")
@@ -35,7 +39,7 @@ result_data <- result_data %>%
 # Remove rows before 1989 -------------------------------------------------
 
 result_data <- subset(result_data, year >= 1989)
-# result_data <- subset(result_data, select = -c(country_year))
+result_data <- subset(result_data, select = -c(country_year))
 result_data <- result_data %>% relocate(year, .after = country)
 result_data$country <- as.character(result_data$country)
 # sort(unique(result_data$country))
@@ -49,12 +53,7 @@ result_data <- result_data %>%
   mutate(period = row_number() - which(discovery_dummy == 1)[1],
          .after = discovery_dummy)
 
-# Create dummies
-result_data <- dummy_cols(result_data, select_columns = "period", ignore_na = T)
-
-result_data <- result_data %>% 
-  mutate_at(c(10:73), ~ replace_na(., 0))
-
+# Year of first discovery
 result_data <- result_data %>% 
   group_by(country) %>%
   mutate(first_discovery = `year`[period == 0],
@@ -62,12 +61,8 @@ result_data <- result_data %>%
 result_data <- result_data %>% 
   mutate(first_discovery = case_when(is.na(first_discovery) ~ 0, T ~ first_discovery))
 
-# Rename period columns for clarity
-colnames(result_data) <- str_replace(colnames(result_data), "period_-", "lag")
-colnames(result_data) <- str_replace(colnames(result_data), "period_", "lead")
 
-
-# Difference in difference ------------------------------------------------
+# Event study -------------------------------------------------------------
 
 out <- att_gt(yname = "number_of_conflicts_started",
               gname = "first_discovery",
@@ -76,10 +71,13 @@ out <- att_gt(yname = "number_of_conflicts_started",
               xformla = ~ 1,
               data = result_data,
               est_method = "reg")
-summary(out)
-# ggdid(out) # Too many groups to see anything
 
 # Dynamic event study
 es <- aggte(out, type = "dynamic", na.rm = T)
 summary(es)
-ggdid(es) # Event study plot shows no parallel trends
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on State-Based Conflicts Started") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -5, xend = 0, yend = 2.5), lty = 2, col = "black")
