@@ -95,7 +95,8 @@ result_data <- result_data %>%
 conflictsuniq <- conflictsuniq %>% 
   group_by(country_year) %>% 
   mutate(number_of_conflicts_started = n(),
-         total_fatalities = sum(best))
+         total_fatalities = sum(best),
+         active_conflicts = sum(active_year))
 
 # From this point, using all violence types -------------------------------
 
@@ -110,7 +111,8 @@ conflictsuniq <- conflictsuniq %>%
 result_data <- left_join(result_data, subset(conflictsuniq, 
                                              select = c("country_year", 
                                                         "number_of_conflicts_started",
-                                                        "total_fatalities")), 
+                                                        "total_fatalities",
+                                                        "active_conflicts")), 
                          by = "country_year")
 result_data <- result_data %>% 
   mutate(number_of_conflicts_started = case_when(is.na(number_of_conflicts_started) ~ 0, 
@@ -173,18 +175,24 @@ result_data <- result_data %>%
 
 
 ## Number of conflicts started ----
+
+# Group-time average treatment effects
 out <- att_gt(yname = "number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
               xformla = ~ 1,
               data = result_data,
-              est_method = "reg")
+              est_method = "reg",
+              allow_unbalanced_panel = T)
 # ggdid(out) # Too many groups to see anything
 
-# Dynamic event study
+# Aggregate group-time average treatment effects (dynamic event study)
 es <- aggte(out, type = "dynamic", na.rm = T)
 # summary(es)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
 
 # Event study plot
 ggdid(es) +
@@ -192,28 +200,27 @@ ggdid(es) +
   theme_classic(base_size = 12) +
   geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
 
-# Overall average treatment effect
-summary(aggte(out, type = "group"))
-
 
 ## Total fatalities ----
+
+# Group-time average treatment effects
 out <- att_gt(yname = "total_fatalities",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
               xformla = ~ 1,
               data = result_data,
-              est_method = "reg")
+              est_method = "reg",
+              allow_unbalanced_panel = T)
 
-# Dynamic event study
+# Aggregate group-time average treatment effects (dynamic event study)
 es <- aggte(out, type = "dynamic", na.rm = T)
-# summary(es)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
 
 # Event study plot
 ggdid(es) +
   ggtitle("Average Effect on Total No. of Fatalities") +
   theme_classic(base_size = 12)
-
-# Overall average treatment effect
-summary(aggte(out, type = "group"))
   
