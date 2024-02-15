@@ -172,7 +172,7 @@ result_data <- result_data %>%
 result_data <- subset(result_data, year >= 1989)
 result_data <- subset(result_data, select = -c(country_year))
 result_data <- result_data %>% relocate(year, .after = country)
-result_data$country <- as.character(result_data$country)
+result_data$country <- as.numeric(as.factor(result_data$country))
 # sort(unique(result_data$country))
 
 
@@ -227,7 +227,7 @@ ggdid(es) +
 # Group-time average treatment effects
 out <- att_gt(yname = "total_fatalities",
               gname = "first_discovery",
-              idname = "country_ID",
+              idname = "country",
               tname = "year",
               xformla = ~ 1,
               data = result_data,
@@ -244,4 +244,3 @@ summary(aggte(out, type = "group"))
 ggdid(es) +
   ggtitle("Average Effect on Total No. of Fatalities") +
   theme_classic(base_size = 12)
-  
