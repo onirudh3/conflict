@@ -58,37 +58,11 @@ conflicts <- conflicts %>%
                              country == "United Arab Emirates" ~ "UAE",
                              TRUE ~ country))
 
+
+
 # Get distinct conflicts
 conflictsuniq <- conflicts %>%
   mutate(country_year = paste(country, year))
-
-
-# Cleaned dataset
-result_data <- expand.grid(year = seq(1980, 2022, 1), 
-                           country = unique(c(conflictsuniq$country, discoveries$COUNTRY)))
-
-# Numeric ID for each country
-result_data <- result_data %>%
-  group_by(country) %>%
-  mutate(country_ID = cur_group_id(),
-         .before = country)
-
-# Conflict dummy
-result_data$conflict_dummy <- 0
-result_data <- result_data %>% 
-  mutate(country_year = paste(country, year), .after = country)
-conflictsuniq <- conflictsuniq %>% 
-  mutate(country_year = paste(country, year))
-result_data <- result_data %>% 
-  mutate(conflict_dummy = case_when(country_year %in% conflictsuniq$country_year ~ 1, T ~ 0))
-
-# Discovery dummy
-result_data$discovery_dummy <- 0
-discoveries <- discoveries %>% 
-  mutate(country_year = paste(COUNTRY, year))
-result_data <- result_data %>% 
-  mutate(discovery_dummy = case_when(country_year %in% discoveries$country_year ~ 1, T ~ 0))
-
 
 # Number of conflicts in a given country-year -----------------------------
 
@@ -111,6 +85,34 @@ conflictsuniq <- conflictsuniq %>%
   slice(1)
 
 
+# Cleaned dataset
+result_data <- expand.grid(year = seq(1989, 2022, 1), 
+                           country = unique(c(conflicts$country, discoveries$COUNTRY)))
+
+# Numeric ID for each country
+result_data <- result_data %>%
+  group_by(country) %>%
+  mutate(country_ID = cur_group_id(),
+         .before = country)
+
+# Conflict dummy
+result_data$conflict_dummy <- 0
+result_data <- result_data %>% 
+  mutate(country_year = paste(country, year), .after = country)
+result_data <- result_data %>% 
+  mutate(conflict_dummy = case_when(country_year %in% conflictsuniq$country_year ~ 1, T ~ 0))
+
+# Discovery dummy
+result_data$discovery_dummy <- 0
+discoveries <- discoveries %>% 
+  mutate(country_year = paste(COUNTRY, year))
+result_data <- result_data %>% 
+  mutate(discovery_dummy = case_when(country_year %in% discoveries$country_year ~ 1, T ~ 0))
+
+
+
+
+
 # From this point, using all violence types -------------------------------
 
 # Create different datasets for different type_of_violence (see other script)
@@ -124,18 +126,25 @@ conflictsuniq <- conflictsuniq %>%
 result_data <- left_join(result_data, subset(conflictsuniq, 
                                              select = c("country_year", 
                                                         "number_of_conflicts_started",
-                                                        "total_fatalities",
-                                                        "active_conflicts")), 
+                                                        "total_fatalities")), 
                          by = "country_year")
+
 result_data <- result_data %>% 
   mutate(number_of_conflicts_started = case_when(is.na(number_of_conflicts_started) ~ 0, 
                                                  T ~ number_of_conflicts_started),
          total_fatalities = case_when(is.na(total_fatalities) ~ 0,
                                       T ~ total_fatalities))
-
 # Remove duplicate rows
-result_data <- result_data %>% 
-  distinct()
+result_data <- result_data %>%
+  group_by(country_year) %>%
+  summarise(
+    country = first(country),
+    year = first(year),
+    total_fatalities = sum(total_fatalities),
+    number_of_conflicts_started = first(number_of_conflicts_started),
+    conflict_dummy = ifelse(sum(conflict_dummy) > 0, 1, 0),
+    discovery_dummy = ifelse(sum(discovery_dummy) > 0, 1, 0)
+  )
 
 
 # Number of discoveries in a given country-year ---------------------------
@@ -186,13 +195,12 @@ result_data <- result_data %>%
 
 # Event study -------------------------------------------------------------
 
-
 ## Number of conflicts started ----
 
 # Group-time average treatment effects
 out <- att_gt(yname = "number_of_conflicts_started",
               gname = "first_discovery",
-              idname = "country_ID",
+              idname = "country",
               tname = "year",
               xformla = ~ 1,
               data = result_data,
