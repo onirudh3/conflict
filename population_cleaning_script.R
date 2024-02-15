@@ -1,12 +1,11 @@
 
 # Population data ---------------------------------------------------------
 
+library(tidyr)
+library(dplyr)
+
 df <- read.csv("Data/API_SP.POP.TOTL_DS2_en_csv_v2_79.csv", skip = 3)
 df <- subset(df, select = -c(2:33, X))
-
-
-# Population averages
-df$pop.avg <- rowMeans(df[ , c(2,35)], na.rm = T)
 
 df <- df %>% rename("country" = "Country.Name")
 
@@ -34,5 +33,15 @@ df <- df %>%
                              country == "Viet Nam" ~ "Vietnam",
                              T ~ country))
 
+# Wide to long
+df <- df %>%
+  pivot_longer(-country)
+
+df <- df %>% rename("year" = "name",
+                    "pop" = "value")
+
+df <- df %>% 
+  mutate(year = as.numeric(gsub("X", "", year)))
+
 # Write csv
-write.csv(subset(df, select = -c(2:35)), "Data/population_average_data.csv", row.names = F)
+write.csv(df, "Data/population_data.csv", row.names = F)

@@ -1,43 +1,30 @@
 
 # Libraries and data ------------------------------------------------------
 
-# install.packages(plyr) # Install this package for computing counts
-library(tidyverse)
-library(readxl)
-library(geosphere)
-library(zoo)
+library(dplyr)
+library(ggplot2)
 library(gplots)
-library(plm) # Panel data analysis
-library(car)
-library(stargazer) # For latex tables
-library(fastDummies) # Creating dummy variables
-library(broom)
-library(lmtest)
-library(did) # Difference-in-difference
+library(readxl)
+library(zoo)
+library(did)
 
 # Oil field data
 discoveries <- read.csv("Data/giant_fields_2018.csv")
 
 # How many countries in discoveries
-plyr::count(discoveries$COUNTRY) # 80 countries
+count(discoveries, COUNTRY) # 80 countries
 
 # Conflict data
 conflicts <- read_excel("Data/GEDEvent_v23_1.xlsx")
 
+# Population average data
+pop_data <- read.csv("Data/population_data.csv")
+
 # How many countries in conflicts
-plyr::count(conflicts$country) # 124 countries
+n_distinct(conflicts$country) # 124 countries
 
 
-# Cleaning ----------------------------------------------------------------
-
-# Checking what countries are in each dataset
-sort(unique(conflicts$country))
-setdiff(discoveries$COUNTRY, conflicts$country)
-setdiff(conflicts$country, discoveries$COUNTRY)
-
-# Differences in country names
-sort(setdiff(union(unique(conflicts$country), unique(discoveries$COUNTRY)), 
-        intersect(unique(conflicts$country), unique(discoveries$COUNTRY))))
+# Country names -----------------------------------------------------------
 
 # Match country names in the two datasets
 discoveries <-discoveries %>%
@@ -57,13 +44,35 @@ conflicts <- conflicts %>%
                              country == "United Arab Emirates" ~ "UAE",
                              TRUE ~ country))
 
-# Get distinct conflicts
-conflictsuniq <- conflicts %>%
+
+# Cleaning conflict data --------------------------------------------------
+
+conflicts <- conflicts %>%
+  mutate(country_year = paste(country, year))
+
+# Total fatalities
+conflicts <- conflicts %>% 
   arrange(date_start) %>%
-  distinct(conflict_new_id, .keep_all = TRUE)
+  group_by(conflict_new_id) %>% 
+  mutate(total_fatalities = sum(best))
+
+# Number of starting conflicts
+conflicts <- conflicts %>% 
+  arrange(date_start) %>%
+  group_by(country_year) %>% 
+  mutate(number_of_conflicts_started = n())
+
+conflictsuniq <- conflicts %>% 
+  arrange(date_start) %>%
+  distinct(conflict_new_id, .keep_all = TRUE) %>%
+  group_by(conflict_new_id) %>%
+  slice(1)
+
+
+# Building the panel dataset ----------------------------------------------
 
 # Cleaned dataset
-result_data <- expand.grid(year = seq(1980, 2022, 1), 
+result_data <- expand.grid(year = seq(1989, 2022, 1), 
                            country = unique(c(conflictsuniq$country, discoveries$COUNTRY)))
 
 # Numeric ID for each country
@@ -76,8 +85,6 @@ result_data <- result_data %>%
 result_data$conflict_dummy <- 0
 result_data <- result_data %>% 
   mutate(country_year = paste(country, year), .after = country)
-conflictsuniq <- conflictsuniq %>% 
-  mutate(country_year = paste(country, year))
 result_data <- result_data %>% 
   mutate(conflict_dummy = case_when(country_year %in% conflictsuniq$country_year ~ 1, T ~ 0))
 
@@ -89,36 +96,35 @@ result_data <- result_data %>%
   mutate(discovery_dummy = case_when(country_year %in% discoveries$country_year ~ 1, T ~ 0))
 
 
-# Number of conflicts in a given country-year -----------------------------
+# Create different datasets for different type_of_violence ----------------
 
-# Number of starting conflicts and total fatalities
-conflictsuniq <- conflictsuniq %>% 
-  group_by(country_year) %>% 
-  mutate(number_of_conflicts_started = n(),
-         total_fatalities = sum(best),
-         active_conflicts = sum(active_year))
+# See other script
 
-# From this point, using all violence types -------------------------------
-
-# Create different datasets for different type_of_violence (see other script)
 # conflictsuniq_1 <- subset(conflictsuniq, type_of_violence == 1) # state-based conflict
 # conflictsuniq_2 <- subset(conflictsuniq, type_of_violence == 2) # non-state conflict
 # conflictsuniq_3 <- subset(conflictsuniq, type_of_violence == 3) # one-sided violence
 
-# See other script for event study using other types of violence (type_of_violence)
+
+
+# Using all violence types ------------------------------------------------
 
 # Merge number_of_conflicts_started and total_fatalities to result_data
 result_data <- left_join(result_data, subset(conflictsuniq, 
                                              select = c("country_year", 
                                                         "number_of_conflicts_started",
-                                                        "total_fatalities",
-                                                        "active_conflicts")), 
+                                                        "total_fatalities")), 
                          by = "country_year")
+
 result_data <- result_data %>% 
   mutate(number_of_conflicts_started = case_when(is.na(number_of_conflicts_started) ~ 0, 
                                                  T ~ number_of_conflicts_started),
          total_fatalities = case_when(is.na(total_fatalities) ~ 0,
                                       T ~ total_fatalities))
+
+result_data <- result_data %>% 
+  group_by(country_year) %>% 
+  mutate(number_of_conflicts_started = sum(number_of_conflicts_started),
+         total_fatalities = sum(total_fatalities))
 
 # Remove duplicate rows
 result_data <- result_data %>% 
@@ -133,25 +139,7 @@ result_data <- result_data %>%
   mutate(total_discoveries = sum(discovery_dummy))
 
 # What are the countries where there are no discoveries?
-plyr::count(subset(result_data, total_discoveries == 0)$country) # 62 countries
-
-# Lag dummies for discoveries in the past 5 and 10 years
-result_data <- result_data %>% 
-  mutate(discovery_dummy_lag_5 = + rollapplyr(discovery_dummy > 0, 5, any, 
-                                              fill = NA), .after = discovery_dummy)
-
-result_data <- result_data %>% 
-  mutate(discovery_dummy_lag_10 = + rollapplyr(discovery_dummy > 0, 10, any, 
-                                               fill = NA), .after = discovery_dummy_lag_5)
-
-
-# Remove rows before 1989 -------------------------------------------------
-
-result_data <- subset(result_data, year >= 1989)
-result_data <- subset(result_data, select = -c(country_year))
-result_data <- result_data %>% relocate(year, .after = country)
-result_data$country <- as.character(result_data$country)
-# sort(unique(result_data$country))
+n_distinct(subset(result_data, total_discoveries == 0)$country) # 68 countries
 
 
 # Time period indicator ---------------------------------------------------
@@ -171,13 +159,26 @@ result_data <- result_data %>%
   mutate(first_discovery = case_when(is.na(first_discovery) ~ 0, T ~ first_discovery))
 
 
-# Event study -------------------------------------------------------------
+# Merge population data ---------------------------------------------------
 
+result_data <- left_join(result_data, pop_data)
+
+
+# Event study -------------------------------------------------------------
 
 ## Number of conflicts started ----
 
+# Take logs
+result_data <- result_data %>% 
+  mutate(number_of_conflicts_started = case_when(number_of_conflicts_started == 0 ~ 1e-500, 
+                                                 T ~ number_of_conflicts_started))
+
+result_data <- result_data %>% 
+  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started),
+         .after = number_of_conflicts_started)
+
 # Group-time average treatment effects
-out <- att_gt(yname = "number_of_conflicts_started",
+out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
@@ -203,8 +204,12 @@ ggdid(es) +
 
 ## Total fatalities ----
 
+# Scale the variable
+result_data <- result_data %>% 
+  mutate(scaled_total_fatalities = (total_fatalities / pop) * 100000)
+
 # Group-time average treatment effects
-out <- att_gt(yname = "total_fatalities",
+out <- att_gt(yname = "scaled_total_fatalities",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
