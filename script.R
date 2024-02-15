@@ -14,6 +14,7 @@ library(fastDummies) # Creating dummy variables
 library(broom)
 library(lmtest)
 library(did) # Difference-in-difference
+library(dplyr)
 
 # Oil field data
 discoveries <- read.csv("Data/giant_fields_2018.csv")
