@@ -4,20 +4,9 @@
 library(dplyr)
 library(ggplot2)
 library(gplots)
-<<<<<<< HEAD
 library(readxl)
 library(zoo)
 library(did)
-=======
-library(plm) # Panel data analysis
-library(car)
-library(stargazer) # For latex tables
-library(fastDummies) # Creating dummy variables
-library(broom)
-library(lmtest)
-library(did) # Difference-in-difference
-library(dplyr)
->>>>>>> 78f7a9f94d5d72a0756ec115cdc62c69b4174c5b
 
 # Oil field data
 discoveries <- read.csv("Data/giant_fields_2018.csv")
@@ -239,4 +228,3 @@ summary(aggte(out, type = "group"))
 ggdid(es) +
   ggtitle("Average Effect on Total No. of Fatalities") +
   theme_classic(base_size = 12)
-  
