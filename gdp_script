@@ -1,0 +1,8 @@
+#GDP 
+gdp <- subset(gdp, Year >= 1989)
+gdp <- gdp %>%
+  group_by(Country.or.Area)%>%
+  summarise(Value = mean(Value))
+result_data <- left_join(result_data, gdp, by = c("country"= "Country.or.Area"))
+result_data <- result_data %>%
+  rename("GDP" = "Value")
