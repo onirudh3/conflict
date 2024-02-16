@@ -15,10 +15,17 @@ discoveries <- read.csv("Data/giant_fields_2018.csv")
 count(discoveries, COUNTRY) # 80 countries
 
 # Conflict data
-conflicts <- read_excel("Data/GEDEvent_v23_1.xlsx")
+conflicts <- read_excel("Data/GEDEvent_v23_1.xlsx") %>% 
+  dplyr::select(c("id", "conflict_new_id", "country", "year", "type_of_violence", 
+                  "best"))
 
-# Population average data
+conflicts$conflict_new_id <- as.factor(conflicts$conflict_new_id)
+
+# Population data from world bank
 pop_data <- read.csv("Data/population_data.csv")
+
+# GDP Data
+gdp <- read.csv("Data/gdp_cleaned.csv")
 
 # How many countries in conflicts
 n_distinct(conflicts$country) # 124 countries
@@ -44,29 +51,31 @@ conflicts <- conflicts %>%
                              country == "United Arab Emirates" ~ "UAE",
                              TRUE ~ country))
 
+# Write to csv
+write.csv(conflicts, "Data/conflicts_raw.csv", row.names = F)
+write.csv(discoveries, "Data/discoveries_raw.csv", row.names = F)
 
-# Cleaning conflict data --------------------------------------------------
 
-conflicts <- conflicts %>%
+# Getting unique conflicts ------------------------------------------------
+
+conflictsuniq <- conflicts %>%
   mutate(country_year = paste(country, year))
 
-# Total fatalities
-conflicts <- conflicts %>% 
-  arrange(date_start) %>%
-  group_by(conflict_new_id) %>% 
+# Total fatalities at country year level
+conflictsuniq <- conflictsuniq %>% 
+  group_by(country_year) %>% 
   mutate(total_fatalities = sum(best))
 
-# Number of starting conflicts
-conflicts <- conflicts %>% 
-  arrange(date_start) %>%
+# Number of starting conflict events at country year level
+conflictsuniq <- conflictsuniq %>% 
   group_by(country_year) %>% 
   mutate(number_of_conflicts_started = n())
 
-conflictsuniq <- conflicts %>% 
-  arrange(date_start) %>%
-  distinct(conflict_new_id, .keep_all = TRUE) %>%
-  group_by(conflict_new_id) %>%
-  slice(1)
+# Aggregate to country year level
+conflictsuniq <- conflictsuniq %>% 
+  select(country, year, country_year, number_of_conflicts_started, total_fatalities) %>%
+  distinct(country_year, .keep_all = T) %>% 
+  arrange(country, year)
 
 
 # Building the panel dataset ----------------------------------------------
@@ -96,17 +105,7 @@ result_data <- result_data %>%
   mutate(discovery_dummy = case_when(country_year %in% discoveries$country_year ~ 1, T ~ 0))
 
 
-# Create different datasets for different type_of_violence ----------------
-
-# See other script
-
-# conflictsuniq_1 <- subset(conflictsuniq, type_of_violence == 1) # state-based conflict
-# conflictsuniq_2 <- subset(conflictsuniq, type_of_violence == 2) # non-state conflict
-# conflictsuniq_3 <- subset(conflictsuniq, type_of_violence == 3) # one-sided violence
-
-
-
-# Using all violence types ------------------------------------------------
+# Merge conflict data -----------------------------------------------------
 
 # Merge number_of_conflicts_started and total_fatalities to result_data
 result_data <- left_join(result_data, subset(conflictsuniq, 
@@ -139,7 +138,7 @@ result_data <- result_data %>%
   mutate(total_discoveries = sum(discovery_dummy))
 
 # What are the countries where there are no discoveries?
-n_distinct(subset(result_data, total_discoveries == 0)$country) # 68 countries
+n_distinct(subset(result_data, total_discoveries == 0)$country) # 78 countries
 
 
 # Time period indicator ---------------------------------------------------
@@ -159,9 +158,13 @@ result_data <- result_data %>%
   mutate(first_discovery = case_when(is.na(first_discovery) ~ 0, T ~ first_discovery))
 
 
-# Merge population data ---------------------------------------------------
 
+# Merge population and gdp data -------------------------------------------
+
+result_data <- left_join(result_data, gdp)
 result_data <- left_join(result_data, pop_data)
+
+View(result_data[!complete.cases(result_data$gdp),])
 
 
 # Event study -------------------------------------------------------------
@@ -170,11 +173,11 @@ result_data <- left_join(result_data, pop_data)
 
 # Take logs
 result_data <- result_data %>% 
-  mutate(number_of_conflicts_started = case_when(number_of_conflicts_started == 0 ~ 1e-500, 
+  mutate(number_of_conflicts_started = case_when(number_of_conflicts_started == 0 ~ 1e-50, 
                                                  T ~ number_of_conflicts_started))
 
 result_data <- result_data %>% 
-  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started),
+  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started) / 100,
          .after = number_of_conflicts_started)
 
 # Group-time average treatment effects
@@ -197,7 +200,7 @@ summary(aggte(out, type = "group"))
 
 # Event study plot
 ggdid(es) +
-  ggtitle("Average Effect on No. of Conflicts Started (All Conflict Types)") +
+  ggtitle("Average Effect on Log No. of Conflicts Started") +
   theme_classic(base_size = 12) +
   geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
 
@@ -206,7 +209,10 @@ ggdid(es) +
 
 # Scale the variable
 result_data <- result_data %>% 
-  mutate(scaled_total_fatalities = (total_fatalities / pop) * 100000)
+  mutate(total_fatalities = case_when(total_fatalities == 0 ~ 1e-50, 
+                                      T ~ total_fatalities))
+result_data <- result_data %>% 
+  mutate(scaled_total_fatalities = log(total_fatalities / pop) / 100)
 
 # Group-time average treatment effects
 out <- att_gt(yname = "scaled_total_fatalities",
@@ -226,5 +232,11 @@ summary(aggte(out, type = "group"))
 
 # Event study plot
 ggdid(es) +
-  ggtitle("Average Effect on Total No. of Fatalities") +
-  theme_classic(base_size = 12)
+  ggtitle("Average Effect on Total No. of Fatalities, Scaled by Population and in Logs") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
+
+# Heterogeneous effects using GDP ------------------------------------------
+
+
