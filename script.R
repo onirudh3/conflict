@@ -164,8 +164,6 @@ result_data <- result_data %>%
 result_data <- left_join(result_data, gdp)
 result_data <- left_join(result_data, pop_data)
 
-View(result_data[!complete.cases(result_data$gdp),])
-
 
 # Event study -------------------------------------------------------------
 
@@ -239,4 +237,72 @@ ggdid(es) +
 
 # Heterogeneous effects using GDP ------------------------------------------
 
+# 1st quartile GDP
+quart <- subset(result_data, quartile %in% c(3, 4))
+
+## Number of conflicts started ----
+
+# Take logs
+quart <- quart %>% 
+  mutate(number_of_conflicts_started = case_when(number_of_conflicts_started == 0 ~ 1e-50, 
+                                                 T ~ number_of_conflicts_started))
+
+quart <- quart %>% 
+  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started) / 100,
+         .after = number_of_conflicts_started)
+
+# Group-time average treatment effects
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              xformla = ~ 1,
+              data = quart,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+# ggdid(out) # Too many groups to see anything
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+# summary(es)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on Log No. of Conflicts Started ()") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
+## Total fatalities ----
+
+# Scale the variable
+quart <- quart %>% 
+  mutate(total_fatalities = case_when(total_fatalities == 0 ~ 1e-50, 
+                                      T ~ total_fatalities))
+quart <- quart %>% 
+  mutate(scaled_total_fatalities = log(total_fatalities / pop) / 100)
+
+# Group-time average treatment effects
+out <- att_gt(yname = "scaled_total_fatalities",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              xformla = ~ 1,
+              data = quart,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on Total No. of Fatalities, Scaled by Population and in Logs") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
 
