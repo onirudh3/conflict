@@ -27,6 +27,9 @@ pop_data <- read.csv("Data/population_data.csv")
 # GDP Data
 gdp <- read.csv("Data/gdp_cleaned.csv")
 
+# Political Stability data
+stability_data <- read.csv("Data/stability_data.csv")
+
 # How many countries in conflicts
 n_distinct(conflicts$country) # 124 countries
 
@@ -158,11 +161,15 @@ result_data <- result_data %>%
   mutate(first_discovery = case_when(is.na(first_discovery) ~ 0, T ~ first_discovery))
 
 
-
 # Merge population and gdp data -------------------------------------------
 
 result_data <- left_join(result_data, gdp)
 result_data <- left_join(result_data, pop_data)
+result_data <- left_join(result_data, stability_data)
+
+# View(result_data[!complete.cases(result_data$stability),]) # We do not have stability data for Kyrgyztan
+
+# Remove Kyrgyzstan
 
 
 # Event study -------------------------------------------------------------
@@ -235,10 +242,10 @@ ggdid(es) +
   geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
 
 
-# Heterogeneous effects using GDP ------------------------------------------
+# Heterogeneous effects using GDP and political stability -----------------
 
 # 1st quartile GDP
-quart <- subset(result_data, quartile %in% c(3, 4))
+quart <- subset(result_data, quartile_stability %in% c(3, 4))
 
 ## Number of conflicts started ----
 
@@ -271,9 +278,10 @@ summary(aggte(out, type = "group"))
 
 # Event study plot
 ggdid(es) +
-  ggtitle("Average Effect on Log No. of Conflicts Started ()") +
+  ggtitle("Average Effect on Log No. of Conflicts Started (Above Median Pol Stability Countries)") +
   theme_classic(base_size = 12) +
   geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
 
 ## Total fatalities ----
 
@@ -305,4 +313,3 @@ ggdid(es) +
   ggtitle("Average Effect on Total No. of Fatalities, Scaled by Population and in Logs") +
   theme_classic(base_size = 12) +
   geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
-
