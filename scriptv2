@@ -28,6 +28,7 @@ conflicts <- read_excel("/Users/jeannelenguin/Desktop/EmpP/Datas/Conflicts.xlsx"
 # How many countries in conflicts
 plyr::count(conflicts$country) # 124 countries
 
+gdp <- read.csv("/Users/jeannelenguin/Desktop/EmpP/Datas/gdp.csv")
 
 # Cleaning ----------------------------------------------------------------
 
@@ -56,7 +57,35 @@ conflicts <- conflicts %>%
                              country == "DR Congo (Zaire)" ~ "Congo",
                              country == "Guinea-Bissau" ~ "Guinea",
                              country == "United Arab Emirates" ~ "UAE",
+                             country == "Madagascar (Malagasy)" ~ "Madagascar",
+                             country == "Zimbabwe (Rhodesia)" ~ "Zimbabwe",
+                             country == "Cambodia (Kampuchea)" ~ "Cambodia",
+                             country == "Serbia (Yugoslavia)" ~ "Serbia",
+                             country == "Kingdom of eSwatini (Swaziland)" ~ "Kingdom of Eswatini",
                              TRUE ~ country))
+
+
+gdp <- gdp %>% 
+  mutate(Country.or.Area = case_when(Country.or.Area == "Russian Federation" ~ "Russia",
+                                     Country.or.Area == "United Republic of Tanzania: Mainland" ~ "Tanzania",
+                                     Country.or.Area == "United Republic of Tanzania: Zanzibar" ~ "Tanzania",
+                                     Country.or.Area == "Côte d'Ivoire" ~ "Ivory Coast",
+                                     Country.or.Area == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
+                                     Country.or.Area == "Republic of North Macedonia" ~ "Macedonia, FYR",
+                                     Country.or.Area == "United Kingdom of Great Britain and Northern Ireland" ~ "United Kingdom",
+                                     Country.or.Area == "China (mainland)" ~ "China",
+                                     Country.or.Area == "Bolivia (Plurinational State of)" ~ "Bolivia",
+                                     Country.or.Area == "Syrian Arab Republic" ~ "Syria",
+                                     Country.or.Area == "Lao People's Democratic Republic" ~ "Laos",
+                                     Country.or.Area == "Türkiye" ~ "Turkey",
+                                     Country.or.Area == "Bosnia and Herzegovina" ~ "Bosnia-Herzegovina",
+                                     Country.or.Area == "Republic of Moldova" ~ "Moldova",
+                                     Country.or.Area == "Iran, Islamic Republic of" ~ "Iran",
+                                     Country.or.Area == "Brunei Darussalam" ~ "Brunei",
+                                     Country.or.Area == "Viet Nam" ~ "Vietnam",
+                                     Country.or.Area == "United Arab Emirates" ~ "UAE",
+                                     TRUE ~ Country.or.Area))
+
 
 
 
@@ -166,6 +195,67 @@ result_data <- result_data %>%
   mutate(discovery_dummy_lag_10 = + rollapplyr(discovery_dummy > 0, 10, any, 
                                                fill = NA), .after = discovery_dummy_lag_5)
 
+# Population data ---------------------------------------------------------
+
+library(tidyr)
+library(dplyr)
+
+df <- read.csv("/Users/jeannelenguin/Desktop/EmpP/Datas/API_SP.POP.TOTL_DS2_en_csv_v2_79.csv", skip = 3)
+df <- subset(df, select = -c(2:33, X))
+
+df <- df %>% rename("country" = "Country.Name")
+
+df <- df %>% 
+  mutate(country = case_when(country == "Russian Federation" ~ "Russia",
+                             country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
+                             country == "Turkiye" ~ "Turkey",
+                             country == "Congo, Dem. Rep." ~ "Congo",
+                             country == "Venezuela, RB" ~ "Venezuela",
+                             country == "Lao PDR" ~ "Laos",
+                             country == "Egypt, Arab Rep." ~ "Egypt",
+                             country == "Cote d'Ivoire" ~ "Ivory Coast",
+                             country == "Iran, Islamic Rep." ~ "Iran",
+                             country == "Serbia" ~ "Serbia (Yugoslavia)",
+                             country == "Bosnia and Herzegovina" ~ "Bosnia-Herzegovina",
+                             country == "Yemen, Rep." ~ "Yemen",
+                             country == "Gambia, The" ~ "Gambia",
+                             country == "North Macedonia" ~ "Macedonia, FYR",
+                             country == "Syrian Arab Republic" ~ "Syria",
+                             country == "Eswatini" ~ "Kingdom of Eswatini",
+                             country == "United Arab Emirates" ~ "UAE",
+                             country == "Brunei Darussalam" ~ "Brunei",
+                             country == "Viet Nam" ~ "Vietnam",
+                             T ~ country))
+
+# Wide to long
+df <- df %>%
+  pivot_longer(-country)
+
+df <- df %>% rename("year" = "name",
+                    "pop" = "value")
+
+df <- df %>% 
+  mutate(year = as.numeric(gsub("X", "", year)))
+
+df <- df %>% 
+  mutate(country_year = paste(country, year))
+result_data <- result_data %>% 
+  mutate(country_year = paste(country, year))
+
+result_data <- left_join(result_data, subset(df, select = c("country_year", "pop")), by = "country_year")
+
+result_data <-result_data %>%
+  mutate(fatalitiespop = total_fatalities /pop*100000)
+
+#GDP 
+gdp <- subset(gdp, Year >= 1989)
+gdp <- gdp %>%
+  group_by(Country.or.Area)%>%
+  summarise(Value = mean(Value))
+result_data <- left_join(result_data, gdp, by = c("country"= "Country.or.Area"))
+result_data <- result_data %>%
+  rename("GDP" = "Value")
+
 
 # Remove rows before 1989 -------------------------------------------------
 
@@ -244,3 +334,171 @@ summary(aggte(out, type = "group"))
 ggdid(es) +
   ggtitle("Average Effect on Total No. of Fatalities") +
   theme_classic(base_size = 12)
+
+
+
+
+# Event study -------------------------------------------------------------
+
+## Number of conflicts started ----
+
+# Group-time average treatment effects
+out <- att_gt(yname = "number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country",
+              tname = "year",
+              xformla = ~ 1,
+              data = result_data,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+# ggdid(out) # Too many groups to see anything
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+# summary(es)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on No. of Conflicts Started (All Conflict Types)") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
+## Total fatalities ----
+
+# Group-time average treatment effects
+out <- att_gt(yname = "fatalitiespop",
+              gname = "first_discovery",
+              idname = "country",
+              tname = "year",
+              xformla = ~ 1,
+              data = result_data,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on Total No. of Fatalities (scale by pop)") +
+  theme_classic(base_size = 12)
+
+
+
+# Rich Poor Countries  ---------------------------------------------------
+
+# Event study -------------------------------------------------------------
+
+# Rich 
+
+datarich <- subset(result_data, GDP >= 5000)
+## Number of conflicts started ----
+
+# Group-time average treatment effects
+out <- att_gt(yname = "number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country",
+              tname = "year",
+              xformla = ~ 1,
+              data = datarich,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+# ggdid(out) # Too many groups to see anything
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+# summary(es)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on No. of Conflicts Started (All Conflict Types)") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
+## Total fatalities ----
+
+# Group-time average treatment effects
+out <- att_gt(yname = "fatalitiespop",
+              gname = "first_discovery",
+              idname = "country",
+              tname = "year",
+              xformla = ~ 1,
+              data = datarich,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on Total No. of Fatalities (scale by pop)") +
+  theme_classic(base_size = 12)
+
+# Poor 
+
+datapoor <- subset(result_data, GDP < 5000)
+
+## Number of conflicts started ----
+
+# Group-time average treatment effects
+out <- att_gt(yname = "number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country",
+              tname = "year",
+              xformla = ~ 1,
+              data = datapoor,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+# ggdid(out) # Too many groups to see anything
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+# summary(es)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on No. of Conflicts Started (All Conflict Types)") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
+## Total fatalities ----
+
+# Group-time average treatment effects
+out <- att_gt(yname = "fatalitiespop",
+              gname = "first_discovery",
+              idname = "country",
+              tname = "year",
+              xformla = ~ 1,
+              data = datapoor,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on Total No. of Fatalities (scale by pop)") +
+  theme_classic(base_size = 12)
+
+
+
