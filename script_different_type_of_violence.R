@@ -18,7 +18,7 @@ pop_data <- read.csv("Data/population_data.csv")
 # Getting unique conflicts ------------------------------------------------
 
 conflictsuniq <- conflicts %>%
-  filter(type_of_violence == 3) %>% # choose 1 (state based), 2 (non-state), or 3 (one-sided)
+  filter(type_of_violence == 1) %>% # choose 1 (state based), 2 (non-state), or 3 (one-sided)
   mutate(country_year = paste(country, year))
 
 # Total fatalities at country year level
@@ -121,57 +121,27 @@ result_data <- result_data %>%
 # Merge population data ---------------------------------------------------
 
 result_data <- left_join(result_data, pop_data)
+result_data <- subset(result_data, country != "Kyrgyzstan")
 
 
-# Event study -------------------------------------------------------------
+# Variable transformations ------------------------------------------------
 
-## Number of conflicts started ----
-
-# Take logs
+# Logs
 result_data <- result_data %>% 
-  mutate(number_of_conflicts_started = case_when(number_of_conflicts_started == 0 ~ 1e-50, 
-                                                 T ~ number_of_conflicts_started))
+  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started + 1),
+         log_total_fatalities = log(total_fatalities + 1))
 
+# Scale by population
 result_data <- result_data %>% 
-  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started) / 100,
-         .after = number_of_conflicts_started)
-
-# Group-time average treatment effects
-out_1 <- att_gt(yname = "log_number_of_conflicts_started",
-              gname = "first_discovery",
-              idname = "country_ID",
-              tname = "year",
-              xformla = ~ 1,
-              data = result_data,
-              est_method = "reg",
-              allow_unbalanced_panel = T)
-# ggdid(out) # Too many groups to see anything
-
-# Aggregate group-time average treatment effects (dynamic event study)
-es_1 <- aggte(out_1, type = "dynamic", na.rm = T)
-# summary(es)
-
-# Overall average treatment effect
-summary(aggte(out_1, type = "group"))
-
-# Event study plot
-ggdid(es_1) +
-  ggtitle("Average Effect on Log No. of One-Sided Conflicts Started") +
-  theme_classic(base_size = 12) +
-  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+  mutate(scaled_number_of_conflicts_started = number_of_conflicts_started / pop * 10000,
+         scaled_total_fatalities = total_fatalities / pop * 1000)
 
 
-## Total fatalities ----
+# Number of conflicts started ---------------------------------------------
 
-# Scale the variable
-result_data <- result_data %>% 
-  mutate(total_fatalities = case_when(total_fatalities == 0 ~ 1e-50, 
-                                      T ~ total_fatalities))
-result_data <- result_data %>% 
-  mutate(scaled_total_fatalities = log(total_fatalities / pop) / 100)
 
-# Group-time average treatment effects
-out_2 <- att_gt(yname = "scaled_total_fatalities",
+## Log number of conflicts ----
+out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
@@ -181,13 +151,67 @@ out_2 <- att_gt(yname = "scaled_total_fatalities",
               allow_unbalanced_panel = T)
 
 # Aggregate group-time average treatment effects (dynamic event study)
-es_2 <- aggte(out_2, type = "dynamic", na.rm = T)
+es <- aggte(out, type = "dynamic", na.rm = T)
 
 # Overall average treatment effect
-summary(aggte(out_2, type = "group"))
+summary(aggte(out, type = "group"))
 
 # Event study plot
-ggdid(es_2) +
-  ggtitle("Average Effect on Total No. of Fatalities (One-Sided Conflicts), Scaled by Population and in Logs") +
+ggdid(es) +
+  ggtitle("Average Effect on Log No. of Conflicts Started") +
   theme_classic(base_size = 12) +
-  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+  ylim(c(-7, 7))
+
+
+## Population scaled number of conflicts ----
+out <- att_gt(yname = "scaled_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              xformla = ~ 1,
+              data = result_data,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+es <- aggte(out, type = "dynamic", na.rm = T)
+summary(aggte(out, type = "group"))
+ggdid(es) +
+  ggtitle("Average Effect on No. of Conflicts Started (Scaled by Population and Multiplied by 10,000)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-0.5, 0.5))
+
+
+# Total fatalities --------------------------------------------------------
+
+
+## Log fatalities ----
+out <- att_gt(yname = "log_total_fatalities",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              xformla = ~ 1,
+              data = result_data,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+es <- aggte(out, type = "dynamic", na.rm = T)
+summary(aggte(out, type = "group"))
+ggdid(es) +
+  ggtitle("Average Effect on Log No. of Fatalities") +
+  theme_classic(base_size = 12) +
+  ylim(c(-7, 7))
+
+
+## Population scaled fatalities ----
+out <- att_gt(yname = "scaled_total_fatalities",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              xformla = ~ 1,
+              data = result_data,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+es <- aggte(out, type = "dynamic", na.rm = T)
+summary(aggte(out, type = "group"))
+ggdid(es) +
+  ggtitle("Average Effect on No. of Fatalities (Scaled by Population and Multiplied by 1,000)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-0.5, 0.5))
