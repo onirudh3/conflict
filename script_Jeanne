@@ -29,20 +29,14 @@ conflicts <- read_excel("/Users/jeannelenguin/Desktop/EmpP/Datas/Conflicts.xlsx"
 plyr::count(conflicts$country) # 124 countries
 
 gdp <- read.csv("/Users/jeannelenguin/Desktop/EmpP/Datas/gdp.csv")
+pop <- read.csv("/Users/jeannelenguin/Desktop/EmpP/Datas/API_SP.POP.TOTL_DS2_en_csv_v2_79.csv", skip = 3)
 
-# Cleaning ----------------------------------------------------------------
+####################################################################################################################################
+###### Cleaning ####################################################################################################################
+####################################################################################################################################
 
-# Checking what countries are in each dataset
-sort(unique(conflicts$country))
-setdiff(discoveries$COUNTRY, conflicts$country)
-setdiff(conflicts$country, discoveries$COUNTRY)
-
-# Differences in country names
-sort(setdiff(union(unique(conflicts$country), unique(discoveries$COUNTRY)), 
-        intersect(unique(conflicts$country), unique(discoveries$COUNTRY))))
-
-# Match country names in the two datasets
-discoveries <-discoveries %>%
+# Match country names in all the datasets
+discoveries <- discoveries %>%
   mutate(COUNTRY = case_when(COUNTRY == "Sierre Leone" ~ "Sierra Leone", 
                              COUNTRY == "Equatorial Guinea" ~ "Guinea",
                              COUNTRY == "Congo (Brazzaville)" ~ "Congo",
@@ -57,156 +51,13 @@ conflicts <- conflicts %>%
                              country == "DR Congo (Zaire)" ~ "Congo",
                              country == "Guinea-Bissau" ~ "Guinea",
                              country == "United Arab Emirates" ~ "UAE",
-                             country == "Madagascar (Malagasy)" ~ "Madagascar",
-                             country == "Zimbabwe (Rhodesia)" ~ "Zimbabwe",
-                             country == "Cambodia (Kampuchea)" ~ "Cambodia",
-                             country == "Serbia (Yugoslavia)" ~ "Serbia",
-                             country == "Kingdom of eSwatini (Swaziland)" ~ "Kingdom of Eswatini",
                              TRUE ~ country))
 
-
-gdp <- gdp %>% 
-  mutate(Country.or.Area = case_when(Country.or.Area == "Russian Federation" ~ "Russia",
-                                     Country.or.Area == "United Republic of Tanzania: Mainland" ~ "Tanzania",
-                                     Country.or.Area == "United Republic of Tanzania: Zanzibar" ~ "Tanzania",
-                                     Country.or.Area == "Côte d'Ivoire" ~ "Ivory Coast",
-                                     Country.or.Area == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
-                                     Country.or.Area == "Republic of North Macedonia" ~ "Macedonia, FYR",
-                                     Country.or.Area == "United Kingdom of Great Britain and Northern Ireland" ~ "United Kingdom",
-                                     Country.or.Area == "China (mainland)" ~ "China",
-                                     Country.or.Area == "Bolivia (Plurinational State of)" ~ "Bolivia",
-                                     Country.or.Area == "Syrian Arab Republic" ~ "Syria",
-                                     Country.or.Area == "Lao People's Democratic Republic" ~ "Laos",
-                                     Country.or.Area == "Türkiye" ~ "Turkey",
-                                     Country.or.Area == "Bosnia and Herzegovina" ~ "Bosnia-Herzegovina",
-                                     Country.or.Area == "Republic of Moldova" ~ "Moldova",
-                                     Country.or.Area == "Iran, Islamic Republic of" ~ "Iran",
-                                     Country.or.Area == "Brunei Darussalam" ~ "Brunei",
-                                     Country.or.Area == "Viet Nam" ~ "Vietnam",
-                                     Country.or.Area == "United Arab Emirates" ~ "UAE",
-                                     TRUE ~ Country.or.Area))
-
-
-
-
-# Get distinct conflicts
-conflictsuniq <- conflicts %>%
-  mutate(country_year = paste(country, year))
-
-# Number of conflicts in a given country-year -----------------------------
-
-# Number of starting conflicts and total fatalities
-conflictsuniq <- conflictsuniq %>% 
-  arrange(date_start) %>%
-  group_by(conflict_new_id) %>% 
-  mutate(total_fatalities = sum(best))
-
-conflictsuniq <- conflictsuniq %>% 
-  arrange(date_start) %>%
-  group_by(country_year) %>% 
-  mutate(number_of_conflicts_started = n(),
-         active_conflicts = sum(active_year))
-
-conflictsuniq <- conflictsuniq %>% 
-  arrange(date_start) %>%
-  distinct(conflict_new_id, .keep_all = TRUE) %>%
-  group_by(conflict_new_id) %>%
-  slice(1)
-
-
-# Cleaned dataset
-result_data <- expand.grid(year = seq(1989, 2022, 1), 
-                           country = unique(c(conflicts$country, discoveries$COUNTRY)))
-
-# Numeric ID for each country
-result_data <- result_data %>%
-  group_by(country) %>%
-  mutate(country_ID = cur_group_id(),
-         .before = country)
-
-# Conflict dummy
-result_data$conflict_dummy <- 0
-result_data <- result_data %>% 
-  mutate(country_year = paste(country, year), .after = country)
-result_data <- result_data %>% 
-  mutate(conflict_dummy = case_when(country_year %in% conflictsuniq$country_year ~ 1, T ~ 0))
-
-# Discovery dummy
-result_data$discovery_dummy <- 0
-discoveries <- discoveries %>% 
-  mutate(country_year = paste(COUNTRY, year))
-result_data <- result_data %>% 
-  mutate(discovery_dummy = case_when(country_year %in% discoveries$country_year ~ 1, T ~ 0))
-
-
-
-
-
-# From this point, using all violence types -------------------------------
-
-# Create different datasets for different type_of_violence (see other script)
-# conflictsuniq_1 <- subset(conflictsuniq, type_of_violence == 1) # state-based conflict
-# conflictsuniq_2 <- subset(conflictsuniq, type_of_violence == 2) # non-state conflict
-# conflictsuniq_3 <- subset(conflictsuniq, type_of_violence == 3) # one-sided violence
-
-# See other script for event study using other types of violence (type_of_violence)
-
-# Merge number_of_conflicts_started and total_fatalities to result_data
-result_data <- left_join(result_data, subset(conflictsuniq, 
-                                             select = c("country_year", 
-                                                        "number_of_conflicts_started",
-                                                        "total_fatalities")), 
-                         by = "country_year")
-
-result_data <- result_data %>% 
-  mutate(number_of_conflicts_started = case_when(is.na(number_of_conflicts_started) ~ 0, 
-                                                 T ~ number_of_conflicts_started),
-         total_fatalities = case_when(is.na(total_fatalities) ~ 0,
-                                      T ~ total_fatalities))
-# Remove duplicate rows
-result_data <- result_data %>%
-  group_by(country_year) %>%
-  summarise(
-    country = first(country),
-    year = first(year),
-    total_fatalities = sum(total_fatalities),
-    number_of_conflicts_started = first(number_of_conflicts_started),
-    conflict_dummy = ifelse(sum(conflict_dummy) > 0, 1, 0),
-    discovery_dummy = ifelse(sum(discovery_dummy) > 0, 1, 0)
-  )
-
-
-# Number of discoveries in a given country-year ---------------------------
-
-# Number of discoveries in a given country
-result_data <- result_data %>% 
-  group_by(country) %>% 
-  mutate(total_discoveries = sum(discovery_dummy))
-
-# What are the countries where there are no discoveries?
-plyr::count(subset(result_data, total_discoveries == 0)$country) # 62 countries
-
-# Lag dummies for discoveries in the past 5 and 10 years
-result_data <- result_data %>% 
-  mutate(discovery_dummy_lag_5 = + rollapplyr(discovery_dummy > 0, 5, any, 
-                                              fill = NA), .after = discovery_dummy)
-
-result_data <- result_data %>% 
-  mutate(discovery_dummy_lag_10 = + rollapplyr(discovery_dummy > 0, 10, any, 
-                                               fill = NA), .after = discovery_dummy_lag_5)
-
-# Population data ---------------------------------------------------------
-
-library(tidyr)
-library(dplyr)
-
-df <- read.csv("/Users/jeannelenguin/Desktop/EmpP/Datas/API_SP.POP.TOTL_DS2_en_csv_v2_79.csv", skip = 3)
-df <- subset(df, select = -c(2:33, X))
-
-df <- df %>% rename("country" = "Country.Name")
-
-df <- df %>% 
-  mutate(country = case_when(country == "Russian Federation" ~ "Russia",
+pop <- subset(pop, select = -c(2:33, X))
+pop <- pop  %>% rename("country" = "Country.Name")
+pop <- pop %>% 
+  mutate(country = case_when(country == "Cambodia" ~ "Cambodia (Kampuchea)",
+                             country == "Russian Federation" ~ "Russia",
                              country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
                              country == "Turkiye" ~ "Turkey",
                              country == "Congo, Dem. Rep." ~ "Congo",
@@ -220,67 +71,151 @@ df <- df %>%
                              country == "Yemen, Rep." ~ "Yemen",
                              country == "Gambia, The" ~ "Gambia",
                              country == "North Macedonia" ~ "Macedonia, FYR",
+                             country == "Madagascar" ~ "Madagascar (Malagasy)",
                              country == "Syrian Arab Republic" ~ "Syria",
-                             country == "Eswatini" ~ "Kingdom of Eswatini",
+                             country == "Eswatini" ~ "Kingdom of eSwatini (Swaziland)",
                              country == "United Arab Emirates" ~ "UAE",
                              country == "Brunei Darussalam" ~ "Brunei",
                              country == "Viet Nam" ~ "Vietnam",
+                             country == "Kyrgyz Republic" ~ "Kyrgyzstan",
                              T ~ country))
-
-# Wide to long
-df <- df %>%
+pop <- pop %>%
   pivot_longer(-country)
-
-df <- df %>% rename("year" = "name",
+pop <- pop %>% rename("year" = "name",
                     "pop" = "value")
-
-df <- df %>% 
+pop <- pop %>% 
   mutate(year = as.numeric(gsub("X", "", year)))
 
-df <- df %>% 
+gdp <- gdp %>% 
+  rename("country" = "Country.or.Area",
+         "year" = "Year",
+         "gdp" = "Value")
+gdp <- gdp %>% 
+  mutate(country = case_when(country == "Russian Federation" ~ "Russia",
+                             country == "United Republic of Tanzania: Mainland" ~ "Tanzania",
+                             country == "United Republic of Tanzania: Zanzibar" ~ "Tanzania",
+                             country == "Côte d'Ivoire" ~ "Ivory Coast",
+                             country == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
+                             country == "Republic of North Macedonia" ~ "Macedonia, FYR",
+                             country == "United Kingdom of Great Britain and Northern Ireland" ~ "United Kingdom",
+                             country == "China (mainland)" ~ "China",
+                             country == "Bolivia (Plurinational State of)" ~ "Bolivia",
+                             country == "Syrian Arab Republic" ~ "Syria",
+                             country == "Lao People's Democratic Republic" ~ "Laos",
+                             country == "Türkiye" ~ "Turkey",
+                             country == "Bosnia and Herzegovina" ~ "Bosnia-Herzegovina",
+                             country == "Republic of Moldova" ~ "Moldova",
+                             country == "Iran, Islamic Republic of" ~ "Iran",
+                             country == "Brunei Darussalam" ~ "Brunei",
+                             country == "Viet Nam" ~ "Vietnam",
+                             country == "United Arab Emirates" ~ "UAE",
+                             country == "Cambodia" ~ "Cambodia (Kampuchea)",
+                             country == "Kingdom of Eswatini" ~ "Kingdom of eSwatini (Swaziland)",
+                             country == "Madagascar" ~ "Madagascar (Malagasy)",
+                             country == "Serbia" ~ "Serbia (Yugoslavia)",
+                             country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
+                             T ~ country))
+
+
+meangdp <- gdp %>% 
+  group_by(country)%>%
+  summarise(gdp = mean(gdp))
+
+# Country_year variable 
+discoveries <- discoveries %>%
+  mutate(country_year = paste(COUNTRY, year))
+
+pop <- pop %>%
   mutate(country_year = paste(country, year))
-result_data <- result_data %>% 
-  mutate(country_year = paste(country, year))
-
-result_data <- left_join(result_data, subset(df, select = c("country_year", "pop")), by = "country_year")
-
-result_data <-result_data %>%
-  mutate(fatalitiespop = total_fatalities /pop*100000)
-
-#GDP 
-gdp <- subset(gdp, Year >= 1989)
 gdp <- gdp %>%
-  group_by(Country.or.Area)%>%
-  summarise(Value = mean(Value))
-result_data <- left_join(result_data, gdp, by = c("country"= "Country.or.Area"))
-result_data <- result_data %>%
-  rename("GDP" = "Value")
+  mutate(country_year = paste(country, year))
 
 
-# Remove rows before 1989 -------------------------------------------------
+####################################################################################################################################
+###### Construction of the dataset #################################################################################################
+####################################################################################################################################
 
-result_data <- subset(result_data, year >= 1989)
-result_data <- subset(result_data, select = -c(country_year))
-result_data <- result_data %>% relocate(year, .after = country)
-result_data$country <- as.numeric(as.factor(result_data$country))
-# sort(unique(result_data$country))
+# Conflict uniq
+conflictsuniq <- conflicts %>%
+  mutate(country_year = paste(country, year))
+
+conflictsuniq <- subset(conflictsuniq, select=c("country_year","country","year","date_start","type_of_violence","conflict_new_id","best"))
+
+conflictsuniq <- conflictsuniq %>% 
+  group_by(country_year)%>%
+  mutate(number_of_conflicts = length(unique(conflict_new_id)))%>%
+  mutate(total_fatalities=sum(best))%>%
+  mutate(number_of_events = n())
+
+conflictsuniq <- conflictsuniq %>% 
+  arrange(date_start) %>%
+  group_by(country_year,conflict_new_id) %>%
+  slice(1)
+
+conflictsuniq <- conflictsuniq %>% 
+  group_by(country_year)%>%
+  mutate(number_of_new_conflicts = n())
 
 
-# Time period indicator ---------------------------------------------------
+#Final database : 
 
-# Discovery period
-result_data <- result_data %>%
+data <- expand.grid(year = seq(1989, 2022, 1), 
+                           country = unique(c(conflicts$country, discoveries$COUNTRY)))
+
+# Conflict dummy
+data$conflict_dummy <- 0
+data <- data %>% 
+  mutate(country_year = paste(country, year), .after = country)
+data <- data %>% 
+  mutate(conflict_dummy = case_when(country_year %in% conflictsuniq$country_year ~ 1, T ~ 0))
+
+# Discovery dummy
+data$discovery_dummy <- 0
+
+data <- data %>% 
+  mutate(discovery_dummy = case_when(country_year %in% discoveries$country_year ~ 1, T ~ 0))
+
+data <- left_join(data, subset(conflictsuniq, select = c("country_year", "number_of_conflicts","number_of_events","number_of_new_conflicts","total_fatalities")), by = "country_year")
+
+data <- data %>% 
+  distinct()
+data <- data %>% 
+  mutate(number_of_conflicts = case_when(is.na(number_of_conflicts) ~ 0, 
+                                                 T ~ number_of_conflicts),
+         total_fatalities = case_when(is.na(total_fatalities) ~ 0,
+                                      T ~ total_fatalities),
+         number_of_new_conflicts = case_when(is.na(number_of_new_conflicts) ~ 0,
+                                      T ~ number_of_new_conflicts),
+         number_of_events = case_when(is.na(number_of_events) ~ 0,
+                                             T ~ number_of_events))
+
+
+data <- left_join(data, subset(pop, select = c("country_year", "pop")), by = "country_year")
+
+data <- left_join(data, subset(meangdp, select = c("country", "gdp")), by = "country")
+
+setdiff(conflicts$country,meangdp$country)
+
+data <- subset(data, select = -c(country_year))
+data <- data %>% relocate(year, .after = country)
+data$country <- as.numeric(as.factor(data$country))
+
+
+data <- data %>%
   group_by(country) %>% 
   mutate(period = row_number() - which(discovery_dummy == 1)[1],
          .after = discovery_dummy)
 
-# Year of first discovery
-result_data <- result_data %>% 
+data <- data %>% 
   group_by(country) %>%
   mutate(first_discovery = `year`[period == 0],
          .after = discovery_dummy)
-result_data <- result_data %>% 
+data <- data %>% 
   mutate(first_discovery = case_when(is.na(first_discovery) ~ 0, T ~ first_discovery))
+
+data <- data %>% 
+  mutate(fatalitiespop = total_fatalities/pop*100000)
+
 
 
 # Event study -------------------------------------------------------------
@@ -288,12 +223,12 @@ result_data <- result_data %>%
 ## Number of conflicts started ----
 
 # Group-time average treatment effects
-out <- att_gt(yname = "number_of_conflicts_started",
+out <- att_gt(yname = "number_of_conflicts",
               gname = "first_discovery",
               idname = "country",
               tname = "year",
               xformla = ~ 1,
-              data = result_data,
+              data = data,
               est_method = "reg",
               allow_unbalanced_panel = T)
 # ggdid(out) # Too many groups to see anything
@@ -320,7 +255,7 @@ out <- att_gt(yname = "total_fatalities",
               idname = "country",
               tname = "year",
               xformla = ~ 1,
-              data = result_data,
+              data = data,
               est_method = "reg",
               allow_unbalanced_panel = T)
 
@@ -338,70 +273,16 @@ ggdid(es) +
 
 
 
-# Event study -------------------------------------------------------------
+# RICH / POOR COUNTRIES -------------------------------------------------------------
 
-## Number of conflicts started ----
-
-# Group-time average treatment effects
-out <- att_gt(yname = "number_of_conflicts_started",
-              gname = "first_discovery",
-              idname = "country",
-              tname = "year",
-              xformla = ~ 1,
-              data = result_data,
-              est_method = "reg",
-              allow_unbalanced_panel = T)
-# ggdid(out) # Too many groups to see anything
-
-# Aggregate group-time average treatment effects (dynamic event study)
-es <- aggte(out, type = "dynamic", na.rm = T)
-# summary(es)
-
-# Overall average treatment effect
-summary(aggte(out, type = "group"))
-
-# Event study plot
-ggdid(es) +
-  ggtitle("Average Effect on No. of Conflicts Started (All Conflict Types)") +
-  theme_classic(base_size = 12) +
-  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
-
-## Total fatalities ----
-
-# Group-time average treatment effects
-out <- att_gt(yname = "fatalitiespop",
-              gname = "first_discovery",
-              idname = "country",
-              tname = "year",
-              xformla = ~ 1,
-              data = result_data,
-              est_method = "reg",
-              allow_unbalanced_panel = T)
-
-# Aggregate group-time average treatment effects (dynamic event study)
-es <- aggte(out, type = "dynamic", na.rm = T)
-
-# Overall average treatment effect
-summary(aggte(out, type = "group"))
-
-# Event study plot
-ggdid(es) +
-  ggtitle("Average Effect on Total No. of Fatalities (scale by pop)") +
-  theme_classic(base_size = 12)
-
-
-
-# Rich Poor Countries  ---------------------------------------------------
-
-# Event study -------------------------------------------------------------
 
 # Rich 
+datarich <- subset(data, gdp >= median(data$gdp))
 
-datarich <- subset(result_data, GDP >= 5000)
-## Number of conflicts started ----
+## Number of conflicts ----
 
 # Group-time average treatment effects
-out <- att_gt(yname = "number_of_conflicts_started",
+out <- att_gt(yname = "number_of_conflicts",
               gname = "first_discovery",
               idname = "country",
               tname = "year",
@@ -420,9 +301,36 @@ summary(aggte(out, type = "group"))
 
 # Event study plot
 ggdid(es) +
-  ggtitle("Average Effect on No. of Conflicts Started (All Conflict Types)") +
+  ggtitle("Average Effect on No. of Conflicts Started  ") +
   theme_classic(base_size = 12) +
   geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
+## Number of conflicts started ----
+
+# Group-time average treatment effects
+out <- att_gt(yname = "number_of_new_conflicts",
+              gname = "first_discovery",
+              idname = "country",
+              tname = "year",
+              xformla = ~ 1,
+              data = datarich,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+# ggdid(out) # Too many groups to see anything
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+# summary(es)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on No. of Conflicts Started  ") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
 
 ## Total fatalities ----
 
@@ -448,13 +356,12 @@ ggdid(es) +
   theme_classic(base_size = 12)
 
 # Poor 
+datapoor <- subset(data, gdp < (data$gdp))
 
-datapoor <- subset(result_data, GDP < 5000)
-
-## Number of conflicts started ----
+## Number of conflicts ----
 
 # Group-time average treatment effects
-out <- att_gt(yname = "number_of_conflicts_started",
+out <- att_gt(yname = "number_of_conflicts",
               gname = "first_discovery",
               idname = "country",
               tname = "year",
@@ -473,7 +380,33 @@ summary(aggte(out, type = "group"))
 
 # Event study plot
 ggdid(es) +
-  ggtitle("Average Effect on No. of Conflicts Started (All Conflict Types)") +
+  ggtitle("Average Effect on No. of Conflicts (All Conflict Types)") +
+  theme_classic(base_size = 12) +
+  geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
+
+## Number of conflicts started ----
+
+# Group-time average treatment effects
+out <- att_gt(yname = "number_of_new_conflicts",
+              gname = "first_discovery",
+              idname = "country",
+              tname = "year",
+              xformla = ~ 1,
+              data = datarich,
+              est_method = "reg",
+              allow_unbalanced_panel = T)
+# ggdid(out) # Too many groups to see anything
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+# summary(es)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot
+ggdid(es) +
+  ggtitle("Average Effect on No. of Conflicts Started  ") +
   theme_classic(base_size = 12) +
   geom_segment(aes(x = 0, y = -4, xend = 0, yend = 3), lty = 2, col = "black")
 
@@ -489,6 +422,7 @@ out <- att_gt(yname = "fatalitiespop",
               est_method = "reg",
               allow_unbalanced_panel = T)
 
+
 # Aggregate group-time average treatment effects (dynamic event study)
 es <- aggte(out, type = "dynamic", na.rm = T)
 
@@ -499,6 +433,9 @@ summary(aggte(out, type = "group"))
 ggdid(es) +
   ggtitle("Average Effect on Total No. of Fatalities (scale by pop)") +
   theme_classic(base_size = 12)
+
+
+
 
 
 
