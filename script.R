@@ -186,6 +186,12 @@ summary(result_data$gdp) # Log GDP per capita
 summary(result_data$pop) # Population
 summary(result_data$stability) # Political stability
 
+# Heterogeneous groups
+summary(subset(result_data, gdp_quartile %in% c(3, 4))$total_discoveries)
+summary(subset(result_data, gdp_quartile %in% c(3, 4))$number_of_conflicts_started)
+
+summary(subset(result_data, gdp_quartile %in% c(1, 2))$total_discoveries)
+summary(subset(result_data, gdp_quartile %in% c(1, 2))$number_of_conflicts_started)
 
 # Variable transformations ------------------------------------------------
 
@@ -198,6 +204,24 @@ result_data <- result_data %>%
 result_data <- result_data %>% 
   mutate(scaled_number_of_conflicts_started = number_of_conflicts_started / pop * 10000,
          scaled_total_fatalities = total_fatalities / pop * 100)
+
+
+# Checking correlation between conflicts and fatalities -------------------
+
+# Set the plotting space
+par(mfrow = c(1, 3))
+
+# Scatter plot
+with(result_data, plot(number_of_conflicts_started, total_fatalities, cex.lab = 1.5))
+abline(lm(total_fatalities ~ number_of_conflicts_started, data = result_data), col = "blue")
+
+# With logs
+with(result_data, plot(log_number_of_conflicts_started, log_total_fatalities, cex.lab = 1.5))
+abline(lm(log_total_fatalities ~ log_number_of_conflicts_started, data = result_data), col = "blue")
+
+# Population scaled
+with(result_data, plot(scaled_number_of_conflicts_started, scaled_total_fatalities, cex.lab = 1.5))
+abline(lm(scaled_total_fatalities ~ scaled_number_of_conflicts_started, data = result_data), col = "blue")
 
 
 # Number of conflicts started ---------------------------------------------
@@ -223,7 +247,7 @@ summary(aggte(out, type = "group"))
 ggdid(es) +
   ggtitle("Average Effect on Log No. of Conflicts Started") +
   theme_classic(base_size = 12) +
-  ylim(c(-7, 7))
+  ylim(c(-9, 9))
 
 
 ## Population scaled number of conflicts ----
@@ -240,7 +264,7 @@ summary(aggte(out, type = "group"))
 ggdid(es) +
   ggtitle("Average Effect on No. of Conflicts Started (Scaled by Population and Multiplied by 10,000)") +
   theme_classic(base_size = 12) +
-  ylim(c(-0.5, 0.5))
+  ylim(c(-0.9, 0.9))
 
 
 # Total fatalities --------------------------------------------------------
@@ -260,7 +284,7 @@ summary(aggte(out, type = "group"))
 ggdid(es) +
   ggtitle("Average Effect on Log No. of Fatalities") +
   theme_classic(base_size = 12) +
-  ylim(c(-7, 7))
+  ylim(c(-9, 9))
 
 
 ## Population scaled fatalities ----
@@ -277,15 +301,13 @@ summary(aggte(out, type = "group"))
 ggdid(es) +
   ggtitle("Average Effect on No. of Fatalities (Scaled by Population and Multiplied by 100)") +
   theme_classic(base_size = 12) +
-  ylim(c(-0.5, 0.5))
+  ylim(c(-0.9, 0.9))
 
 
 # Adding a conflict dummy -------------------------------------------------
 
-# Does not seem to make any difference
-
 ## Log number of conflicts ----
-out <- att_gt(yname = "log_number_of_conflicts_started",
+out <- att_gt(yname = "scaled_total_fatalities",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
@@ -296,16 +318,19 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
 es <- aggte(out, type = "dynamic", na.rm = T)
 summary(aggte(out, type = "group"))
 ggdid(es) +
-  ggtitle("Average Effect on Log No. of Conflicts Started") +
+  ggtitle("Average Effect on No. of Fatalities (Scaled by Population and Multiplied by 100) (Including Conflict Dummy)") +
   theme_classic(base_size = 12) +
-  ylim(c(-7, 7))
+  ylim(c(-0.5, 0.5))
 
 
 # Heterogeneous effects using GDP and political stability -----------------
 
+## Checking correlation ----
+with(result_data, plot(gdp, stability, cex.lab = 1.5))
+abline(lm(stability ~ gdp, data = result_data), col = "blue")
 
 ## Richer countries ----
-quart <- subset(result_data, gdp_quartile %in% c(3))
+quart <- subset(result_data, quartile_stability %in% c(3, 4))
 
 # Number of conflicts
 out <- att_gt(yname = "log_number_of_conflicts_started",
@@ -319,11 +344,6 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
 es <- aggte(out, type = "dynamic", na.rm = T)
 summary(aggte(out, type = "group"))
 ggdid(es) +
-  ggtitle("") +
-  theme_classic(base_size = 12)
-
-
-
-
-
-
+  ggtitle("Average Effect on Log No. of Conflicts Started (Above Median Political Stability)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
