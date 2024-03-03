@@ -6,6 +6,7 @@ library(dplyr)
 library(readxl)
 
 # GDP data ---------------------------------------------------------
+# Source?
 
 df <- read.csv("Data/gdp.csv")
 
@@ -64,6 +65,7 @@ write.csv(subset(df, select = c(country, gdp, gdp_quartile)), "Data/gdp_cleaned.
 
 
 # Political stability data ---------------------------------------------------------
+# From https://data.worldbank.org/indicator/PV.PER.RNK
 
 df <- read.csv("Data/API_PV.PER.RNK_DS2_en_csv_v2_1195.csv", skip = 3)
 df <- subset(df, select = -c(2:33, X))
@@ -125,6 +127,7 @@ write.csv(subset(df, select = c(country, stability, quartile_stability)), "Data/
 
 
 # Population data ---------------------------------------------------------
+# From https://data.worldbank.org/indicator/SP.POP.TOTL
 
 df <- read.csv("Data/API_SP.POP.TOTL_DS2_en_csv_v2_79.csv", skip = 3)
 df <- subset(df, select = -c(2:33, X))
