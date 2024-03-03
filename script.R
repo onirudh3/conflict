@@ -223,10 +223,13 @@ abline(lm(log_total_fatalities ~ log_number_of_conflicts_started, data = result_
 with(result_data, plot(scaled_number_of_conflicts_started, scaled_total_fatalities, cex.lab = 1.5))
 abline(lm(scaled_total_fatalities ~ scaled_number_of_conflicts_started, data = result_data), col = "blue")
 
+<<<<<<< HEAD
 # Correlation with population is positive
 with(result_data, plot(number_of_conflicts_started, pop, cex.lab = 1.5))
 abline(lm(pop ~ number_of_conflicts_started, data = result_data), col = "blue")
 
+=======
+>>>>>>> 68c15b91e3645b0b91343635e3b3f8c3ccaf580a
 
 # Number of conflicts started ---------------------------------------------
 
@@ -351,9 +354,12 @@ ggdid(es) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Above Median Political Stability)") +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
+<<<<<<< HEAD
 
 
 
 
 
 
+=======
+>>>>>>> 68c15b91e3645b0b91343635e3b3f8c3ccaf580a
