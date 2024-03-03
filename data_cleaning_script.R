@@ -4,6 +4,7 @@
 library(tidyr)
 library(dplyr)
 library(readxl)
+library(fabricatr)
 
 
 # GDP data ---------------------------------------------------------
@@ -49,82 +50,40 @@ df <- df %>%
   summarise(gdp = mean(gdp))
 
 df <- df %>% 
-  mutate(gdp = log(gdp))
+  mutate(lgdp = log(gdp))
 
-df <- df %>% 
-  mutate(quartile_1 = quantile(gdp, probs = 0.25),
-         quartile_2 = quantile(gdp, probs = 0.50),
-         quartile_3 = quantile(gdp, probs = 0.75),
-         quartile_4 = quantile(gdp, probs = 1)) %>% 
-  mutate(gdp_quartile = case_when(gdp >= 0 & gdp < quartile_1 ~ 1,
-                                  gdp >= quartile_1 & gdp < quartile_2 ~ 2,
-                                  gdp >= quartile_2 & gdp < quartile_3 ~ 3, 
-                                  T ~ 4))
+df$lgdp_tercile <- split_quantile(df$lgdp, 3)
 
 # Write csv
-write.csv(subset(df, select = c(country, gdp, gdp_quartile)), "Data/gdp_cleaned.csv", row.names = F)
+write.csv(subset(df, select = c(country, lgdp, lgdp_tercile)), "Data/gdp_cleaned.csv", row.names = F)
 
 
-# Political stability data ---------------------------------------------------------
-# From https://data.worldbank.org/indicator/PV.PER.RNK
+# V-Dem rule of law data --------------------------------------------------
 
-df <- read.csv("Data/API_PV.PER.RNK_DS2_en_csv_v2_1195.csv", skip = 3)
-df <- subset(df, select = -c(2:33, X))
-
-df <- df %>% rename("country" = "Country.Name")
+df <- read.csv("Data/rule-of-law-index.csv")
+df <- df %>% rename("year" = "Year",
+                    "country" = "Entity")
+df <- subset(df, year > 1988)
+df <- df %>% 
+  group_by(country) %>% 
+  mutate(rule_of_law = mean(rule_of_law_vdem_owid))
+df$rule_of_law_tercile = split_quantile(df$rule_of_law, 3)
+df <- subset(df, !duplicated(country))
 
 df <- df %>% 
-  mutate(country = case_when(country == "Cambodia" ~ "Cambodia (Kampuchea)",
-                             country == "Russian Federation" ~ "Russia",
-                             country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
-                             country == "Turkiye" ~ "Turkey",
-                             country == "Congo, Dem. Rep." ~ "Congo",
-                             country == "Venezuela, RB" ~ "Venezuela",
-                             country == "Lao PDR" ~ "Laos",
-                             country == "Egypt, Arab Rep." ~ "Egypt",
+  mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "Bosnia-Herzegovina",
+                             country == "Cambodia" ~ "Cambodia (Kampuchea)",
                              country == "Cote d'Ivoire" ~ "Ivory Coast",
-                             country == "Iran, Islamic Rep." ~ "Iran",
-                             country == "Serbia" ~ "Serbia (Yugoslavia)",
-                             country == "Bosnia and Herzegovina" ~ "Bosnia-Herzegovina",
-                             country == "Yemen, Rep." ~ "Yemen",
-                             country == "Gambia, The" ~ "Gambia",
+                             country == "Eswatini" ~ "Kingdom of eSwatini (Swaziland)",
                              country == "North Macedonia" ~ "Macedonia, FYR",
                              country == "Madagascar" ~ "Madagascar (Malagasy)",
-                             country == "Syrian Arab Republic" ~ "Syria",
-                             country == "Eswatini" ~ "Kingdom of eSwatini (Swaziland)",
+                             country == "Serbia" ~ "Serbia (Yugoslavia)",
                              country == "United Arab Emirates" ~ "UAE",
-                             country == "Brunei Darussalam" ~ "Brunei",
-                             country == "Viet Nam" ~ "Vietnam",
+                             country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
                              T ~ country))
 
-# Wide to long
-df <- df %>%
-  pivot_longer(-country)
-
-df <- df %>% rename("year" = "name",
-                    "stability" = "value")
-
-df <- df %>% 
-  mutate(year = as.numeric(gsub("X", "", year)))
-
-df <- subset(df, !is.na(stability))
-
-df <- df %>%
-  group_by(country)%>%
-  summarise(stability = mean(stability))
-
-df <- df %>% 
-  mutate(quartile_stability_1 = quantile(stability, probs = 0.25),
-         quartile_stability_2 = quantile(stability, probs = 0.50),
-         quartile_stability_3 = quantile(stability, probs = 0.75),
-         quartile_stability_4 = quantile(stability, probs = 1)) %>% 
-  mutate(quartile_stability = case_when(stability >= 0 & stability < quartile_stability_1 ~ 1,
-                                        stability >= quartile_stability_1 & stability < quartile_stability_2 ~ 2,
-                                        stability >= quartile_stability_2 & stability < quartile_stability_3 ~ 3, 
-                                        T ~ 4))
-
-# Write csv
-write.csv(subset(df, select = c(country, stability, quartile_stability)), "Data/stability_data.csv", row.names = F)
+write.csv(subset(df, select = c(country, rule_of_law, rule_of_law_tercile)), 
+          "Data/rule_of_law_cleaned.csv", row.names = F)
 
 
 # Population data ---------------------------------------------------------
@@ -193,6 +152,9 @@ pop_data <- read.csv("Data/population_data.csv")
 
 # GDP data
 gdp <- read.csv("Data/gdp_cleaned.csv")
+
+# Rule of law data
+rule <- read.csv("Data/rule_of_law_cleaned.csv")
 
 # Political stability data
 stability_data <- read.csv("Data/stability_data.csv")
@@ -332,11 +294,13 @@ result_data <- result_data %>%
 
 result_data <- left_join(result_data, gdp) # GDP
 result_data <- left_join(result_data, pop_data) # Population
-result_data <- left_join(result_data, stability_data) # Political stability
+result_data <- left_join(result_data, rule) # Rule of law
 
-# We do not have population and political stability data for Kyrgyzstan, so we remove it
-# View(result_data[!complete.cases(result_data$stability),])
-result_data <- subset(result_data, country != "Kyrgyzstan")
+# We do not have some data for Kyrgyzstan and Brunei, so we remove them
+View(result_data[!complete.cases(result_data$lgdp),])
+View(result_data[!complete.cases(result_data$pop),])
+View(result_data[!complete.cases(result_data$rule_of_law),])
+result_data <- subset(result_data, !(country %in% c("Kyrgyzstan", "Brunei")))
 
 
 # Variable transformations ------------------------------------------------
