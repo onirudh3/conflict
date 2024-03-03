@@ -15,28 +15,8 @@ discoveries <- read.csv("Data/discoveries_raw.csv")
 pop_data <- read.csv("Data/population_data.csv")
 
 
-<<<<<<< HEAD
 # Getting unique conflicts ------------------------------------------------
 
-=======
-# Libraries and data ------------------------------------------------------
-
-library(dplyr)
-library(ggplot2)
-library(gplots)
-library(readxl)
-library(zoo)
-library(did)
-
-# Data
-conflicts <- read.csv("Data/conflicts_raw.csv")
-discoveries <- read.csv("Data/discoveries_raw.csv")
-pop_data <- read.csv("Data/population_data.csv")
-
-
-# Getting unique conflicts ------------------------------------------------
-
->>>>>>> 68c15b91e3645b0b91343635e3b3f8c3ccaf580a
 conflictsuniq <- conflicts %>%
   filter(type_of_violence == 1) %>% # choose 1 (state based), 2 (non-state), or 3 (one-sided)
   mutate(country_year = paste(country, year))
