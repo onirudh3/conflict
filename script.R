@@ -13,6 +13,7 @@ library(xtable)
 # Read cleaned data
 df <- read.csv("Data/final_dataset.csv")
 
+
 # Summary Statistics ------------------------------------------------------
 
 n_distinct(result_data$country) # Number of countries
@@ -31,19 +32,6 @@ summary(subset(result_data, gdp_quartile %in% c(3, 4))$number_of_conflicts_start
 
 summary(subset(result_data, gdp_quartile %in% c(1, 2))$total_discoveries)
 summary(subset(result_data, gdp_quartile %in% c(1, 2))$number_of_conflicts_started)
-
-
-# Variable transformations ------------------------------------------------
-
-# Logs
-result_data <- result_data %>% 
-  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started + 1),
-         log_total_fatalities = log(total_fatalities + 1))
-
-# Scale by population
-result_data <- result_data %>% 
-  mutate(scaled_number_of_conflicts_started = number_of_conflicts_started / pop,
-         scaled_total_fatalities = total_fatalities / pop)
 
 
 # Checking correlation between conflicts and fatalities -------------------

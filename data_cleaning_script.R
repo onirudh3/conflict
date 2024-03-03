@@ -339,6 +339,20 @@ result_data <- left_join(result_data, stability_data) # Political stability
 result_data <- subset(result_data, country != "Kyrgyzstan")
 
 
+# Variable transformations ------------------------------------------------
+
+# Logs
+result_data <- result_data %>% 
+  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started + 1),
+         log_total_fatalities = log(total_fatalities + 1))
+
+# Scale by population
+result_data <- result_data %>% 
+  mutate(scaled_number_of_conflicts_started = number_of_conflicts_started / pop,
+         scaled_total_fatalities = total_fatalities / pop)
+
+
 # Write to csv ------------------------------------------------------------
 
 write.csv(result_data, "Data/final_dataset.csv", row.names = F)
+
