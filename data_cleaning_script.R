@@ -59,6 +59,7 @@ write.csv(subset(df, select = c(country, lgdp, lgdp_tercile)), "Data/gdp_cleaned
 
 
 # V-Dem rule of law data --------------------------------------------------
+# From https://ourworldindata.org/grapher/rule-of-law-index
 
 df <- read.csv("Data/rule-of-law-index.csv")
 df <- df %>% rename("year" = "Year",
