@@ -15,8 +15,9 @@ df <- read.csv("Data/final_dataset.csv")
 
 
 # Summary statistics heterogeneous groups ---------------------------------
-n_distinct(subset(df, lgdp_tercile %in% c(3))$country)
-
+n_distinct(subset(df, religion %in% c("Other"))$country)
+summary(subset(df, religion %in% c("Other"))$number_of_conflicts_started)
+summary(subset(df, religion %in% c("Other"))$total_discoveries)
 
 
 # Checking correlation between conflicts and fatalities -------------------
@@ -43,7 +44,7 @@ abline(lm(pop ~ number_of_conflicts_started, data = df), col = "blue")
 
 # Presence of conflict ----------------------------------------------------
 
-## Conflict dummy ----
+# Conflict dummy
 out <- att_gt(yname = "conflict_dummy",
               gname = "first_discovery",
               idname = "country_ID",
@@ -62,7 +63,7 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
 
 # Number of conflicts started ---------------------------------------------
 
-## Log number of conflicts started ----
+# Log number of conflicts started
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
@@ -74,7 +75,7 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 
-## Population scaled number of conflicts ----
+# Population scaled number of conflicts
 df$scaled_number_of_conflicts_started <- df$scaled_number_of_conflicts_started * 10000
 out <- att_gt(yname = "scaled_number_of_conflicts_started",
               gname = "first_discovery",
@@ -90,7 +91,7 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
 
 # Total fatalities --------------------------------------------------------
 
-## Log fatalities ----
+# Log fatalities
 out <- att_gt(yname = "log_total_fatalities",
               gname = "first_discovery",
               idname = "country_ID",
@@ -102,7 +103,7 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 
-## Population scaled fatalities ----
+# Population scaled fatalities
 df$scaled_total_fatalities <- df$scaled_total_fatalities * 100
 out <- att_gt(yname = "scaled_total_fatalities",
               gname = "first_discovery",
@@ -118,12 +119,12 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
 
 # Heterogeneous effects using log GDP -------------------------------------
 
-## Checking correlation between GDP and rule of law ----
+# Checking correlation between GDP and rule of law
 with(df, plot(lgdp, rule_of_law, cex.lab = 1, pch = 20))
 abline(lm(rule_of_law ~ lgdp, data = df), col = "blue")
 
 # Number of conflicts
-## Poor countries ----
+# Poor countries
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
@@ -135,7 +136,7 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 
-## Middle countries ----
+# Middle countries
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
@@ -147,7 +148,7 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 
-## Rich countries ----
+# Rich countries
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
@@ -162,7 +163,7 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
 
 # Heterogeneous effects using rule of law ---------------------------------
 
-## Low quality rule of law countries ----
+# Low quality rule of law countries
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
@@ -174,5 +175,71 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 
+# Middle quality rule of law countries
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = subset(df, rule_of_law_tercile %in% c(2)))
+summary(aggte(out, type = "group"))
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (Middle Quality Rule of Law Countries)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
+
+# High quality rule of law countries
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = subset(df, rule_of_law_tercile %in% c(3)))
+summary(aggte(out, type = "group"))
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (High Quality Rule of Law Countries)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
+
+
+# Heterogeneous effect using religion -------------------------------------
+
+df <- df %>% mutate(religion = case_when(religion %in% c("Buddhists", "Folk.Religions", "Hindus",
+                                                         "Jews", "Unaffiliated") ~ "Other",
+                                         T ~ religion))
+
+# Christian
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = subset(df, religion %in% c("Christians")))
+summary(aggte(out, type = "group"))
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (Predominantly Christian Countries)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
+
+# Muslim
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = subset(df, religion %in% c("Muslims")))
+summary(aggte(out, type = "group"))
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (Predominantly Muslim Countries)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
+
+# Other
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = subset(df, religion %in% c("Other")))
+summary(aggte(out, type = "group"))
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (Predominantly Other Religion Countries)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
 
 
