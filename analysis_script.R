@@ -36,6 +36,28 @@ with(df, plot(number_of_conflicts_started, pop, cex.lab = 1.5))
 abline(lm(pop ~ number_of_conflicts_started, data = df), col = "blue")
 
 
+# Presence of conflict ----------------------------------------------------
+
+## Conflict dummy ----
+out <- att_gt(yname = "conflict_dummy",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = df)
+
+# Aggregate group-time average treatment effects (dynamic event study)
+es <- aggte(out, type = "dynamic", na.rm = T)
+
+# Overall average treatment effect
+summary(aggte(out, type = "group"))
+
+# Event study plot 
+ggdid(es) +
+  ggtitle("Average Effect on Log No. of Conflicts Started") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
+
+
 # Number of conflicts started ---------------------------------------------
 
 

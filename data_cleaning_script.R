@@ -298,9 +298,9 @@ result_data <- left_join(result_data, pop_data) # Population
 result_data <- left_join(result_data, rule) # Rule of law
 
 # We do not have some data for Kyrgyzstan and Brunei, so we remove them
-View(result_data[!complete.cases(result_data$lgdp),])
-View(result_data[!complete.cases(result_data$pop),])
-View(result_data[!complete.cases(result_data$rule_of_law),])
+# View(result_data[!complete.cases(result_data$lgdp),])
+# View(result_data[!complete.cases(result_data$pop),])
+# View(result_data[!complete.cases(result_data$rule_of_law),])
 result_data <- subset(result_data, !(country %in% c("Kyrgyzstan", "Brunei")))
 
 
@@ -319,5 +319,5 @@ result_data <- result_data %>%
 
 # Write to csv ------------------------------------------------------------
 
-write.csv(result_data, "Data/final_dataset.csv", row.names = F)
+write.csv(subset(result_data, select = -c(country_year)), "Data/final_dataset.csv", row.names = F)
 
