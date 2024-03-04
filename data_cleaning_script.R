@@ -7,6 +7,36 @@ library(readxl)
 library(fabricatr)
 
 
+# Religion data -----------------------------------------------------------
+# From https://datahub.io/sagargg/world-religion-projections
+
+df <- read.csv("Data/by_rounded_percentage_share_csv.csv")
+df <- subset(df, select = -c(Year, Region))
+df <- df %>% rename("country" = "Country")
+df <- subset(df, !duplicated(country))
+
+df <- df %>%  
+  pivot_longer(-country, names_to = "religion") %>% 
+  group_by(country) %>% 
+  slice_max(value) %>% 
+  ungroup()
+
+df <- df %>% 
+  mutate(country = case_when(country == "Democratic Republic of the Congo" ~ "Congo",
+                             country == "Cambodia" ~ "Cambodia (Kampuchea)",
+                             country == "Swaziland" ~ "Kingdom of eSwatini (Swaziland)",
+                             country == "Republic of Macedonia" ~ "Macedonia, FYR",
+                             country == "Madagascar" ~ "Madagascar (Malagasy)",
+                             country == "Burma (Myanmar)" ~ "Myanmar",
+                             country == "Serbia" ~ "Serbia (Yugoslavia)",
+                             country == "United Arab Emirates" ~ "UAE",
+                             country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
+                             T ~ country))
+
+# Write csv
+write.csv(subset(df, select = c(country, religion)), "Data/religion_cleaned.csv", row.names = F)
+
+
 # GDP data ---------------------------------------------------------
 # Source?
 
@@ -52,10 +82,8 @@ df <- df %>%
 df <- df %>% 
   mutate(lgdp = log(gdp))
 
-df$lgdp_tercile <- split_quantile(df$lgdp, 3)
-
 # Write csv
-write.csv(subset(df, select = c(country, lgdp, lgdp_tercile)), "Data/gdp_cleaned.csv", row.names = F)
+write.csv(subset(df, select = c(country, lgdp)), "Data/gdp_cleaned.csv", row.names = F)
 
 
 # V-Dem rule of law data --------------------------------------------------
@@ -68,7 +96,7 @@ df <- subset(df, year > 1988)
 df <- df %>% 
   group_by(country) %>% 
   mutate(rule_of_law = mean(rule_of_law_vdem_owid))
-df$rule_of_law_tercile = split_quantile(df$rule_of_law, 3)
+
 df <- subset(df, !duplicated(country))
 
 df <- df %>% 
@@ -83,7 +111,7 @@ df <- df %>%
                              country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
                              T ~ country))
 
-write.csv(subset(df, select = c(country, rule_of_law, rule_of_law_tercile)), 
+write.csv(subset(df, select = c(country, rule_of_law)), 
           "Data/rule_of_law_cleaned.csv", row.names = F)
 
 
@@ -157,8 +185,8 @@ gdp <- read.csv("Data/gdp_cleaned.csv")
 # Rule of law data
 rule <- read.csv("Data/rule_of_law_cleaned.csv")
 
-# Political stability data
-stability_data <- read.csv("Data/stability_data.csv")
+# Religion data
+religion <- read.csv("Data/religion_cleaned.csv")
 
 # How many countries in conflicts
 n_distinct(conflicts$country) # 124 countries
@@ -296,12 +324,20 @@ result_data <- result_data %>%
 result_data <- left_join(result_data, gdp) # GDP
 result_data <- left_join(result_data, pop_data) # Population
 result_data <- left_join(result_data, rule) # Rule of law
+result_data <- left_join(result_data, religion) # Religion
 
 # We do not have some data for Kyrgyzstan and Brunei, so we remove them
 # View(result_data[!complete.cases(result_data$lgdp),])
 # View(result_data[!complete.cases(result_data$pop),])
 # View(result_data[!complete.cases(result_data$rule_of_law),])
+# View(result_data[!complete.cases(result_data$religion),])
 result_data <- subset(result_data, !(country %in% c("Kyrgyzstan", "Brunei")))
+
+# GDP tercile
+result_data$lgdp_tercile <- split_quantile(result_data$lgdp, 3)
+
+# Rule of law tercile
+result_data$rule_of_law_tercile <- split_quantile(result_data$rule_of_law, 3)
 
 
 # Variable transformations ------------------------------------------------
