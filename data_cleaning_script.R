@@ -7,6 +7,26 @@ library(readxl)
 library(fabricatr)
 
 
+# Continents --------------------------------------------------------------
+# From https://www.kaggle.com/datasets/hserdaraltan/countries-by-continent
+
+df <- read.csv("Data/Countries by continents.csv")
+df <- df %>% rename("country" = "Country", "continent" = "Continent")
+df <- df %>% 
+  mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "Bosnia-Herzegovina",
+                             country == "Burkina" ~ "Burkina Faso",
+                             country == "Cambodia" ~ "Cambodia (Kampuchea)",
+                             country == "Swaziland" ~ "Kingdom of eSwatini (Swaziland)",
+                             country == "Macedonia" ~ "Macedonia, FYR",
+                             country == "Madagascar" ~ "Madagascar (Malagasy)",
+                             country == "Burma (Myanmar)" ~ "Myanmar",
+                             country == "Serbia" ~ "Serbia (Yugoslavia)",
+                             country == "United Arab Emirates" ~ "UAE",
+                             country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
+                             T ~ country))
+write.csv(df, "Data/continents_cleaned.csv", row.names = F)
+
+
 # Religion data -----------------------------------------------------------
 # From https://datahub.io/sagargg/world-religion-projections
 
@@ -14,14 +34,21 @@ df <- read.csv("Data/by_rounded_percentage_share_csv.csv")
 df <- subset(df, select = -c(Year, Region))
 df <- df %>% rename("country" = "Country")
 df <- subset(df, !duplicated(country))
+df <- mutate_if(df, is.numeric, function(x) x / 100)
 
-df <- df %>%  
+# Index of fractionalisation
+df <- df %>% 
+  mutate(religion_index = Buddhists ^ 2 + Christians ^ 2 + Folk.Religions ^ 2 + 
+           Hindus ^ 2 + Jews ^ 2 + Muslims ^ 2 + Other.Religions ^ 2 + Unaffiliated ^ 2)
+
+dx <- df %>%  
   pivot_longer(-country, names_to = "religion") %>% 
   group_by(country) %>% 
   slice_max(value) %>% 
   ungroup()
+dx <- left_join(dx, subset(df, select = c(country, religion_index)))
 
-df <- df %>% 
+dx <- dx %>% 
   mutate(country = case_when(country == "Democratic Republic of the Congo" ~ "Congo",
                              country == "Cambodia" ~ "Cambodia (Kampuchea)",
                              country == "Swaziland" ~ "Kingdom of eSwatini (Swaziland)",
@@ -34,7 +61,7 @@ df <- df %>%
                              T ~ country))
 
 # Write csv
-write.csv(subset(df, select = c(country, religion)), "Data/religion_cleaned.csv", row.names = F)
+write.csv(subset(dx, select = c(country, religion, religion_index)), "Data/religion_cleaned.csv", row.names = F)
 
 
 # GDP data ---------------------------------------------------------
@@ -175,6 +202,9 @@ conflicts <- read_excel("Data/GEDEvent_v23_1.xlsx") %>%
                   "best"))
 
 conflicts$conflict_new_id <- as.factor(conflicts$conflict_new_id)
+
+# Continent names
+continents <- read.csv("Data/continents_cleaned.csv")
 
 # Population data
 pop_data <- read.csv("Data/population_data.csv")
@@ -325,12 +355,14 @@ result_data <- left_join(result_data, gdp) # GDP
 result_data <- left_join(result_data, pop_data) # Population
 result_data <- left_join(result_data, rule) # Rule of law
 result_data <- left_join(result_data, religion) # Religion
+result_data <- left_join(result_data, continents) # Continent names
 
 # We do not have some data for Kyrgyzstan and Brunei, so we remove them
 # View(result_data[!complete.cases(result_data$lgdp),])
 # View(result_data[!complete.cases(result_data$pop),])
 # View(result_data[!complete.cases(result_data$rule_of_law),])
 # View(result_data[!complete.cases(result_data$religion),])
+# View(result_data[!complete.cases(result_data$continent),])
 result_data <- subset(result_data, !(country %in% c("Kyrgyzstan", "Brunei")))
 
 # GDP tercile

@@ -49,7 +49,7 @@ out <- att_gt(yname = "conflict_dummy",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = df)
+              data = df, alp = 0.1)
 
 # Overall average treatment effect
 summary(aggte(out, type = "group"))
@@ -68,7 +68,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = df)
+              data = df, alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started") +
@@ -81,7 +81,7 @@ out <- att_gt(yname = "scaled_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = df)
+              data = df, alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on No. of Conflicts Started (Scaled by Population and Multiplied by 10,000)") +
@@ -96,7 +96,7 @@ out <- att_gt(yname = "log_total_fatalities",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = df)
+              data = df, alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Fatalities") +
@@ -109,7 +109,7 @@ out <- att_gt(yname = "scaled_total_fatalities",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = df)
+              data = df, alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on No. of Fatalities (Scaled by Population and Multiplied by 100)") +
@@ -129,7 +129,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, lgdp_tercile %in% c(1)))
+              data = subset(df, lgdp_tercile %in% c(1)), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Poorest Tercile of GDP)") +
@@ -141,7 +141,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, lgdp_tercile %in% c(2)))
+              data = subset(df, lgdp_tercile %in% c(2)), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Middle Tercile of GDP)") +
@@ -153,7 +153,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, lgdp_tercile %in% c(3)))
+              data = subset(df, lgdp_tercile %in% c(3)), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Richest Tercile of GDP)") +
@@ -168,7 +168,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, rule_of_law_tercile %in% c(1)))
+              data = subset(df, rule_of_law_tercile %in% c(1)), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Low Quality Rule of Law Countries)") +
@@ -180,7 +180,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, rule_of_law_tercile %in% c(2)))
+              data = subset(df, rule_of_law_tercile %in% c(2)), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Middle Quality Rule of Law Countries)") +
@@ -192,7 +192,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, rule_of_law_tercile %in% c(3)))
+              data = subset(df, rule_of_law_tercile %in% c(3)), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (High Quality Rule of Law Countries)") +
@@ -211,7 +211,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, religion %in% c("Christians")))
+              data = subset(df, religion %in% c("Christians")), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Predominantly Christian Countries)") +
@@ -223,7 +223,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, religion %in% c("Muslims")))
+              data = subset(df, religion %in% c("Muslims")), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Predominantly Muslim Countries)") +
@@ -235,7 +235,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              data = subset(df, religion %in% c("Other")))
+              data = subset(df, religion %in% c("Other")), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Predominantly Other Religion Countries)") +
