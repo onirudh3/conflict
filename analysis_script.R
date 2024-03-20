@@ -76,6 +76,15 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 
+# Controlling for continent
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = df,
+              alp = 0.1, xformla = ~ continent)
+summary(aggte(out, type = "group"))
+
 # Population scaled number of conflicts
 df$scaled_number_of_conflicts_started <- df$scaled_number_of_conflicts_started * 10000
 out <- att_gt(yname = "scaled_number_of_conflicts_started",
