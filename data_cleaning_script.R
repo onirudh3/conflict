@@ -60,6 +60,11 @@ dx <- dx %>%
                              country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
                              T ~ country))
 
+# Religions we want Christians, Muslims, and Other
+dx <- dx %>% mutate(religion = case_when(religion %in% c("Buddhists", "Folk.Religions", "Hindus",
+                                                         "Jews", "Unaffiliated") ~ "Other",
+                                         T ~ religion))
+
 # Write csv
 write.csv(subset(dx, select = c(country, religion, religion_index)), "Data/religion_cleaned.csv", row.names = F)
 
@@ -99,18 +104,21 @@ df <- df %>%
                              country == "Zimbabwe" ~ "Zimbabwe (Rhodesia)",
                              T ~ country))
 
+df <- df %>% 
+  group_by(country) %>% 
+  mutate(lgdp_1988 = log(gdp[year == 1988][1]))
 df <- subset(df, year > 1988)
 df <- subset(df, select = -c(Item))
 
 df <- df %>%
   group_by(country)%>%
-  summarise(gdp = mean(gdp))
+  summarise(gdp = mean(gdp), lgdp_1988 = mean(lgdp_1988))
 
 df <- df %>% 
   mutate(lgdp = log(gdp))
 
 # Write csv
-write.csv(subset(df, select = c(country, lgdp)), "Data/gdp_cleaned.csv", row.names = F)
+write.csv(subset(df, select = c(country, lgdp, lgdp_1988)), "Data/gdp_cleaned.csv", row.names = F)
 
 
 # V-Dem rule of law data --------------------------------------------------
@@ -370,6 +378,9 @@ result_data$lgdp_tercile <- split_quantile(result_data$lgdp, 3)
 
 # Rule of law tercile
 result_data$rule_of_law_tercile <- split_quantile(result_data$rule_of_law, 3)
+
+# Religion index tercile
+result_data$religion_index_tercile <- split_quantile(result_data$religion_index, 3)
 
 
 # Variable transformations ------------------------------------------------

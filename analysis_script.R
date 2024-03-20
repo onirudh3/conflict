@@ -12,12 +12,13 @@ library(xtable)
 
 # Read cleaned data
 df <- read.csv("Data/final_dataset.csv")
+control_df <- subset(df, total_discoveries == 0)
 
 
 # Summary statistics heterogeneous groups ---------------------------------
-n_distinct(subset(df, religion %in% c("Other"))$country)
-summary(subset(df, religion %in% c("Other"))$number_of_conflicts_started)
-summary(subset(df, religion %in% c("Other"))$total_discoveries)
+n_distinct(subset(df, religion_index_tercile %in% c(3))$country)
+summary(subset(df, religion_index_tercile %in% c(3))$number_of_conflicts_started)
+summary(subset(df, religion_index_tercile %in% c(3))$total_discoveries)
 
 
 # Checking correlation between conflicts and fatalities -------------------
@@ -202,10 +203,6 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
 
 # Heterogeneous effect using religion -------------------------------------
 
-df <- df %>% mutate(religion = case_when(religion %in% c("Buddhists", "Folk.Religions", "Hindus",
-                                                         "Jews", "Unaffiliated") ~ "Other",
-                                         T ~ religion))
-
 # Christian
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
@@ -239,6 +236,53 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   ggtitle("Average Effect on Log No. of Conflicts Started (Predominantly Other Religion Countries)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
+
+
+# Religious fractionalisation ---------------------------------------------
+
+# Checking correlation between GDP and religious fractionalisation
+with(df, plot(lgdp, religion_index, cex.lab = 1, pch = 20))
+abline(lm(religion_index ~ lgdp, data = df), col = "blue")
+
+# Checking correlation between rule of law and religious fractionalisation
+with(df, plot(rule_of_law, religion_index, cex.lab = 1, pch = 20))
+abline(lm(religion_index ~ rule_of_law, data = df), col = "blue")
+
+# High religious fractionalisation
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = subset(df, religion_index_tercile %in% c(1)), alp = 0.1)
+summary(aggte(out, type = "group"))
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (High Religious Fractionalisation)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
+
+# Medium tercile religious fractionalisation
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = subset(df, religion_index_tercile %in% c(2)), alp = 0.1)
+summary(aggte(out, type = "group"))
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (Medium Tercile Religious Fractionalisation)") +
+  theme_classic(base_size = 12) +
+  ylim(c(-9, 9))
+
+# Low religious fractionalisation
+out <- att_gt(yname = "log_number_of_conflicts_started",
+              gname = "first_discovery",
+              idname = "country_ID",
+              tname = "year",
+              data = subset(df, religion_index_tercile %in% c(3)), alp = 0.1)
+summary(aggte(out, type = "group"))
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (Medium Tercile Religious Fractionalisation)") +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 

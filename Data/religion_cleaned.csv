@@ -23,7 +23,7 @@
 "Belize","Christians",0.776022
 "Benin","Christians",0.373205
 "Bermuda","Christians",0.601557
-"Bhutan","Buddhists",0.609946
+"Bhutan","Other",0.609946
 "Bolivia","Christians",0.884002
 "Bosnia-Herzegovina","Christians",0.478958
 "Botswana","Christians",0.566377
@@ -32,9 +32,9 @@
 "Brunei","Muslims",0.584477
 "Bulgaria","Christians",0.695074
 "Burkina Faso","Muslims",0.454297
-"Myanmar","Buddhists",0.653238
+"Myanmar","Other",0.653238
 "Burundi","Christians",0.841758
-"Cambodia (Kampuchea)","Buddhists",0.939961
+"Cambodia (Kampuchea)","Other",0.939961
 "Cameroon","Christians",0.532625
 "Canada","Christians",0.53335
 "Cape Verde","Christians",0.802887
@@ -44,7 +44,7 @@
 "Chad","Muslims",0.471866
 "Channel Islands","Christians",0.746668
 "Chile","Christians",0.807357
-"China","Unaffiliated",0.356794
+"China","Other",0.356794
 "Colombia","Christians",0.860581
 "Comoros","Muslims",0.966989
 "Cook Islands","Christians",0.923224
@@ -53,7 +53,7 @@
 "Cuba","Christians",0.43414
 "Curacao","Christians",0.883454
 "Cyprus","Christians",0.600477
-"Czech Republic","Unaffiliated",0.638585
+"Czech Republic","Other",0.638585
 "Congo","Christians",0.918813
 "Denmark","Christians",0.71333
 "Djibouti","Muslims",0.94009
@@ -64,7 +64,7 @@
 "El Salvador","Christians",0.790624
 "Equatorial Guinea","Christians",0.791558
 "Eritrea","Christians",0.530197
-"Estonia","Unaffiliated",0.515017
+"Estonia","Other",0.515017
 "Ethiopia","Christians",0.515276
 "Faeroe Islands","Christians",0.961289
 "Falkland Islands (Malvinas)","Christians",0.551409
@@ -91,20 +91,20 @@
 "Guyana","Christians",0.502497
 "Haiti","Christians",0.767381
 "Honduras","Christians",0.779022
-"Hong Kong","Unaffiliated",0.369727
+"Hong Kong","Other",0.369727
 "Hungary","Christians",0.691296
 "Iceland","Christians",0.904325
-"India","Hindus",0.654315
+"India","Other",0.654315
 "Indonesia","Muslims",0.770974
 "Iran","Muslims",0.9808
 "Iraq","Muslims",0.9808
 "Ireland","Christians",0.850865
 "Isle of Man","Christians",0.731597
-"Israel","Jews",0.607893
+"Israel","Other",0.607893
 "Italy","Christians",0.711134
 "Ivory Coast","Christians",0.35231
 "Jamaica","Christians",0.628093
-"Japan","Unaffiliated",0.458809
+"Japan","Other",0.458809
 "Jordan","Muslims",0.945868
 "Kazakhstan","Muslims",0.558889
 "Kenya","Christians",0.729871
@@ -112,7 +112,7 @@
 "Kosovo","Muslims",0.884165
 "Kuwait","Muslims",0.577939
 "Kyrgyzstan","Muslims",0.787996
-"Laos","Buddhists",0.530574
+"Laos","Other",0.530574
 "Latvia","Christians",0.503808
 "Lebanon","Muslims",0.523058
 "Lesotho","Christians",0.938585
@@ -121,7 +121,7 @@
 "Liechtenstein","Christians",0.848402
 "Lithuania","Christians",0.817004
 "Luxembourg","Christians",0.568469
-"Macau","Folk.Religions",0.40615
+"Macau","Other",0.40615
 "Madagascar (Malagasy)","Christians",0.735695
 "Malawi","Christians",0.702143
 "Malaysia","Muslims",0.450363
@@ -131,19 +131,19 @@
 "Marshall Islands","Christians",0.95145
 "Martinique","Christians",0.932354
 "Mauritania","Muslims",0.9808
-"Mauritius","Hindus",0.372583
+"Mauritius","Other",0.372583
 "Mayotte","Muslims",0.972896
 "Mexico","Christians",0.90721
 "Moldova","Christians",0.949472
 "Monaco","Christians",0.754078
-"Mongolia","Buddhists",0.43556
+"Mongolia","Other",0.43556
 "Montenegro","Christians",0.646454
 "Montserrat","Christians",0.877254
 "Morocco","Muslims",0.9808
 "Mozambique","Christians",0.391806
 "Namibia","Christians",0.951586
 "Nauru","Christians",0.638583
-"Nepal","Hindus",0.665743
+"Nepal","Other",0.665743
 "Netherlands","Christians",0.437377
 "New Caledonia","Christians",0.738004
 "New Zealand","Christians",0.459997
@@ -151,7 +151,7 @@
 "Niger","Muslims",0.968956
 "Nigeria","Christians",0.481889
 "Niue","Christians",0.930985
-"North Korea","Unaffiliated",0.541064
+"North Korea","Other",0.541064
 "Northern Mariana Islands","Christians",0.675535
 "Norway","Christians",0.729479
 "Oman","Muslims",0.745631
@@ -181,17 +181,17 @@
 "Serbia (Yugoslavia)","Christians",0.860746
 "Seychelles","Christians",0.885003
 "Sierra Leone","Muslims",0.652681
-"Singapore","Buddhists",0.208132
+"Singapore","Other",0.208132
 "Sint Maarten","Christians",0.883454
 "Slovakia","Christians",0.748658
 "Slovenia","Christians",0.648852
 "Solomon Islands","Christians",0.949445
 "Somalia","Muslims",0.9808
 "South Africa","Christians",0.682355
-"South Korea","Unaffiliated",0.354673
+"South Korea","Other",0.354673
 "South Sudan","Christians",0.47861
 "Spain","Christians",0.654837
-"Sri Lanka","Buddhists",0.514078
+"Sri Lanka","Other",0.514078
 "St. Helena","Christians",0.932914
 "St. Kitts and Nevis","Christians",0.895966
 "St. Lucia","Christians",0.834421
@@ -203,10 +203,10 @@
 "Sweden","Christians",0.5271
 "Switzerland","Christians",0.575111
 "Syria","Muslims",0.864788
-"Taiwan","Folk.Religions",0.286431
+"Taiwan","Other",0.286431
 "Tajikistan","Muslims",0.93607
 "Tanzania","Christians",0.50182
-"Thailand","Buddhists",0.872249
+"Thailand","Other",0.872249
 "Timor-Leste","Christians",0.9808
 "Togo","Christians",0.341549
 "Tokelau","Christians",0.9808
@@ -228,7 +228,7 @@
 "Vanuatu","Christians",0.87291
 "Vatican City","Christians",0.9808
 "Venezuela","Christians",0.808049
-"Vietnam","Folk.Religions",0.326845
+"Vietnam","Other",0.326845
 "Wallis and Futuna","Christians",0.94942
 "Western Sahara","Muslims",0.9808
 "Yemen","Muslims",0.9808
