@@ -1,24 +1,62 @@
 
-# Different types of violence
-# Libraries and data ------------------------------------------------------
 
+# Libraries ---------------------------------------------------------------
+
+library(tidyr)
 library(dplyr)
+library(readxl)
+library(fabricatr)
 library(ggplot2)
 library(gplots)
-library(readxl)
 library(zoo)
 library(did)
 
-# Data
-conflicts <- read.csv("Data/conflicts_raw.csv")
-discoveries <- read.csv("Data/discoveries_raw.csv")
-pop_data <- read.csv("Data/population_data.csv")
+
+# Building the data for analysis ------------------------------------------
+
+# Oil field data
+discoveries <- read.csv("Data/giant_fields_2018.csv")
+
+# Conflict data
+conflicts <- read_excel("Data/GEDEvent_v23_1.xlsx") %>% 
+  dplyr::select(c("id", "conflict_new_id", "country", "year", "type_of_violence", 
+                  "best"))
+
+conflicts$conflict_new_id <- as.factor(conflicts$conflict_new_id)
+
+
+# Country names -----------------------------------------------------------
+
+# Match country names between conflicts and discoveries
+discoveries <-discoveries %>%
+  mutate(COUNTRY = case_when(COUNTRY == "Sierre Leone" ~ "Sierra Leone", 
+                             COUNTRY == "Equatorial Guinea" ~ "Guinea",
+                             COUNTRY == "Congo (Brazzaville)" ~ "Congo",
+                             COUNTRY == "Norway and United Kingdom" ~ "Norway",
+                             COUNTRY == "Divided Neutral Zone: Kuwait/Saudi Arabia" ~ "Kuwait",
+                             TRUE ~ COUNTRY))
+conflicts <- conflicts %>% 
+  mutate(country = case_when(country == "Russia (Soviet Union)" ~ "Russia",
+                             country == "Myanmar (Burma)" ~ "Myanmar",
+                             country == "Yemen (North Yemen)" ~ "Yemen",
+                             country == "United States of America" ~ "United States",
+                             country == "DR Congo (Zaire)" ~ "Congo",
+                             country == "Guinea-Bissau" ~ "Guinea",
+                             country == "United Arab Emirates" ~ "UAE",
+                             TRUE ~ country))
 
 
 # Getting unique conflicts ------------------------------------------------
 
+# Type of UCDP conflict:
+# 1: state-based conflict -- we have 124 countries
+# 2: non-state conflict -- 111 countries
+# 3: one-sided violence -- 123 countries
+
+# Select type of violence
+conflicts <- subset(conflicts, type_of_violence == 3)
+
 conflictsuniq <- conflicts %>%
-  filter(type_of_violence == 1) %>% # choose 1 (state based), 2 (non-state), or 3 (one-sided)
   mutate(country_year = paste(country, year))
 
 # Total fatalities at country year level
@@ -90,17 +128,6 @@ result_data <- result_data %>%
   distinct()
 
 
-# Number of discoveries in a given country-year ---------------------------
-
-# Number of discoveries in a given country
-result_data <- result_data %>% 
-  group_by(country) %>% 
-  mutate(total_discoveries = sum(discovery_dummy))
-
-# What are the countries where there are no discoveries?
-n_distinct(subset(result_data, total_discoveries == 0)$country) # 78 countries
-
-
 # Time period indicator ---------------------------------------------------
 
 # Discovery period
@@ -118,100 +145,41 @@ result_data <- result_data %>%
   mutate(first_discovery = case_when(is.na(first_discovery) ~ 0, T ~ first_discovery))
 
 
-# Merge population data ---------------------------------------------------
+# Number of discoveries in a given country-year ---------------------------
 
-result_data <- left_join(result_data, pop_data)
-result_data <- subset(result_data, country != "Kyrgyzstan")
+# Number of discoveries in a given country
+result_data <- result_data %>% 
+  group_by(country) %>% 
+  mutate(total_discoveries = sum(discovery_dummy))
 
 
 # Variable transformations ------------------------------------------------
 
 # Logs
 result_data <- result_data %>% 
-  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started + 1),
-         log_total_fatalities = log(total_fatalities + 1))
-
-# Scale by population
-result_data <- result_data %>% 
-  mutate(scaled_number_of_conflicts_started = number_of_conflicts_started / pop * 10000,
-         scaled_total_fatalities = total_fatalities / pop * 1000)
+  mutate(log_number_of_conflicts_started = log(number_of_conflicts_started + 1))
 
 
 # Number of conflicts started ---------------------------------------------
 
-
-## Log number of conflicts ----
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
               tname = "year",
-              xformla = ~ 1,
-              data = result_data,
-              est_method = "reg",
-              allow_unbalanced_panel = T)
-
-# Aggregate group-time average treatment effects (dynamic event study)
-es <- aggte(out, type = "dynamic", na.rm = T)
-
-# Overall average treatment effect
+              data = result_data, alp = 0.1)
 summary(aggte(out, type = "group"))
-
-# Event study plot
-ggdid(es) +
-  ggtitle("Average Effect on Log No. of Conflicts Started") +
+ggdid(aggte(out, type = "dynamic", na.rm = T)) +
+  ggtitle("Average Effect on Log No. of Conflicts Started (One Sided Conflicts)") +
   theme_classic(base_size = 12) +
-  ylim(c(-7, 7))
+  ylim(c(-9, 9))
+
+# Sample mean and standard deviation
+summary(result_data$log_number_of_conflicts_started)
+sd(result_data$log_number_of_conflicts_started)
+
+# Control sample
+summary(subset(result_data, total_discoveries == 0)$log_number_of_conflicts_started)
 
 
-## Population scaled number of conflicts ----
-out <- att_gt(yname = "scaled_number_of_conflicts_started",
-              gname = "first_discovery",
-              idname = "country_ID",
-              tname = "year",
-              xformla = ~ 1,
-              data = result_data,
-              est_method = "reg",
-              allow_unbalanced_panel = T)
-es <- aggte(out, type = "dynamic", na.rm = T)
-summary(aggte(out, type = "group"))
-ggdid(es) +
-  ggtitle("Average Effect on No. of Conflicts Started (Scaled by Population and Multiplied by 10,000)") +
-  theme_classic(base_size = 12) +
-  ylim(c(-0.5, 0.5))
 
 
-# Total fatalities --------------------------------------------------------
-
-
-## Log fatalities ----
-out <- att_gt(yname = "log_total_fatalities",
-              gname = "first_discovery",
-              idname = "country_ID",
-              tname = "year",
-              xformla = ~ 1,
-              data = result_data,
-              est_method = "reg",
-              allow_unbalanced_panel = T)
-es <- aggte(out, type = "dynamic", na.rm = T)
-summary(aggte(out, type = "group"))
-ggdid(es) +
-  ggtitle("Average Effect on Log No. of Fatalities") +
-  theme_classic(base_size = 12) +
-  ylim(c(-7, 7))
-
-
-## Population scaled fatalities ----
-out <- att_gt(yname = "scaled_total_fatalities",
-              gname = "first_discovery",
-              idname = "country_ID",
-              tname = "year",
-              xformla = ~ 1,
-              data = result_data,
-              est_method = "reg",
-              allow_unbalanced_panel = T)
-es <- aggte(out, type = "dynamic", na.rm = T)
-summary(aggte(out, type = "group"))
-ggdid(es) +
-  ggtitle("Average Effect on No. of Fatalities (Scaled by Population and Multiplied by 1,000)") +
-  theme_classic(base_size = 12) +
-  ylim(c(-0.5, 0.5))
