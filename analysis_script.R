@@ -20,6 +20,10 @@ n_distinct(subset(df, religion_index_tercile %in% c(3))$country)
 summary(subset(df, religion_index_tercile %in% c(3))$number_of_conflicts_started)
 summary(subset(df, religion_index_tercile %in% c(3))$total_discoveries)
 
+summary(subset(df, religion_index_tercile %in% c(3))$log_number_of_conflicts_started)
+summary(subset(control_df, religion_index_tercile %in% c(3))$log_number_of_conflicts_started)
+sd(subset(df, religion_index_tercile %in% c(3))$log_number_of_conflicts_started)
+
 
 # Checking correlation between conflicts and fatalities -------------------
 
@@ -259,7 +263,7 @@ abline(lm(religion_index ~ lgdp, data = df), col = "blue")
 with(df, plot(rule_of_law, religion_index, cex.lab = 1, pch = 20))
 abline(lm(religion_index ~ rule_of_law, data = df), col = "blue")
 
-# High religious fractionalisation
+# Low religious fractionalisation
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
@@ -267,9 +271,9 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               data = subset(df, religion_index_tercile %in% c(1)), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
-  ggtitle("Average Effect on Log No. of Conflicts Started (High Religious Fractionalisation)") +
+  ggtitle("Average Effect on Log No. of Conflicts Started (Low Religious Fractionalisation)") +
   theme_classic(base_size = 12) +
-  ylim(c(-9, 9))
+  ylim(c(-10, 10))
 
 # Medium tercile religious fractionalisation
 out <- att_gt(yname = "log_number_of_conflicts_started",
@@ -283,7 +287,7 @@ ggdid(aggte(out, type = "dynamic", na.rm = T)) +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 
-# Low religious fractionalisation
+# High religious fractionalisation
 out <- att_gt(yname = "log_number_of_conflicts_started",
               gname = "first_discovery",
               idname = "country_ID",
@@ -291,7 +295,7 @@ out <- att_gt(yname = "log_number_of_conflicts_started",
               data = subset(df, religion_index_tercile %in% c(3)), alp = 0.1)
 summary(aggte(out, type = "group"))
 ggdid(aggte(out, type = "dynamic", na.rm = T)) +
-  ggtitle("Average Effect on Log No. of Conflicts Started (Medium Tercile Religious Fractionalisation)") +
+  ggtitle("Average Effect on Log No. of Conflicts Started (High Tercile Religious Fractionalisation)") +
   theme_classic(base_size = 12) +
   ylim(c(-9, 9))
 

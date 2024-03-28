@@ -1,236 +1,236 @@
 "country","religion","religion_index"
-"Afghanistan","Muslims",0.9808
-"Albania","Muslims",0.677905
-"Algeria","Muslims",0.959365
-"All Countries","Christians",0.210538
-"American Samoa","Christians",0.966989
-"Andorra","Christians",0.809369
-"Angola","Christians",0.82389
-"Anguilla","Christians",0.823933
-"Antigua and Barbuda","Christians",0.866985
-"Argentina","Christians",0.741388
-"Armenia","Christians",0.970994
-"Aruba","Christians",0.84883
-"Australia","Christians",0.513294
-"Austria","Christians",0.668057
-"Azerbaijan","Muslims",0.940461
-"Bahamas","Christians",0.923161
-"Bahrain","Muslims",0.526124
-"Bangladesh","Muslims",0.825041
-"Barbados","Christians",0.907361
-"Belarus","Christians",0.58934
-"Belgium","Christians",0.500245
-"Belize","Christians",0.776022
-"Benin","Christians",0.373205
-"Bermuda","Christians",0.601557
-"Bhutan","Other",0.609946
-"Bolivia","Christians",0.884002
-"Bosnia-Herzegovina","Christians",0.478958
-"Botswana","Christians",0.566377
-"Brazil","Christians",0.797846
-"British Virgin Islands","Christians",0.72319
-"Brunei","Muslims",0.584477
-"Bulgaria","Christians",0.695074
-"Burkina Faso","Muslims",0.454297
-"Myanmar","Other",0.653238
-"Burundi","Christians",0.841758
-"Cambodia (Kampuchea)","Other",0.939961
-"Cameroon","Christians",0.532625
-"Canada","Christians",0.53335
-"Cape Verde","Christians",0.802887
-"Caribbean Netherlands","Christians",0.883454
-"Cayman Islands","Christians",0.708586
-"Central African Republic","Christians",0.80885
-"Chad","Muslims",0.471866
-"Channel Islands","Christians",0.746668
-"Chile","Christians",0.807357
-"China","Other",0.356794
-"Colombia","Christians",0.860581
-"Comoros","Muslims",0.966989
-"Cook Islands","Christians",0.923224
-"Costa Rica","Christians",0.833122
-"Croatia","Christians",0.875653
-"Cuba","Christians",0.43414
-"Curacao","Christians",0.883454
-"Cyprus","Christians",0.600477
-"Czech Republic","Other",0.638585
-"Congo","Christians",0.918813
-"Denmark","Christians",0.71333
-"Djibouti","Muslims",0.94009
-"Dominica","Christians",0.892825
-"Dominican Republic","Christians",0.786881
-"Ecuador","Christians",0.889106
-"Egypt","Muslims",0.903802
-"El Salvador","Christians",0.790624
-"Equatorial Guinea","Christians",0.791558
-"Eritrea","Christians",0.530197
-"Estonia","Other",0.515017
-"Ethiopia","Christians",0.515276
-"Faeroe Islands","Christians",0.961289
-"Falkland Islands (Malvinas)","Christians",0.551409
-"Federated States of Micronesia","Christians",0.909538
-"Fiji","Christians",0.497046
-"Finland","Christians",0.678682
-"France","Christians",0.481425
-"French Guiana","Christians",0.722429
-"French Polynesia","Christians",0.886601
-"Gabon","Christians",0.604905
-"Gambia","Muslims",0.907026
-"Georgia","Christians",0.795274
-"Germany","Christians",0.536842
-"Ghana","Christians",0.59053
-"Gibraltar","Christians",0.79205
-"Greece","Christians",0.783191
-"Greenland","Christians",0.924746
-"Grenada","Christians",0.933925
-"Guadeloupe","Christians",0.920906
-"Guam","Christians",0.888555
-"Guatemala","Christians",0.908585
-"Guinea","Muslims",0.72567
-"Guinea-Bissau","Muslims",0.33994
-"Guyana","Christians",0.502497
-"Haiti","Christians",0.767381
-"Honduras","Christians",0.779022
-"Hong Kong","Other",0.369727
-"Hungary","Christians",0.691296
-"Iceland","Christians",0.904325
-"India","Other",0.654315
-"Indonesia","Muslims",0.770974
-"Iran","Muslims",0.9808
-"Iraq","Muslims",0.9808
-"Ireland","Christians",0.850865
-"Isle of Man","Christians",0.731597
-"Israel","Other",0.607893
-"Italy","Christians",0.711134
-"Ivory Coast","Christians",0.35231
-"Jamaica","Christians",0.628093
-"Japan","Other",0.458809
-"Jordan","Muslims",0.945868
-"Kazakhstan","Muslims",0.558889
-"Kenya","Christians",0.729871
-"Kiribati","Christians",0.941984
-"Kosovo","Muslims",0.884165
-"Kuwait","Muslims",0.577939
-"Kyrgyzstan","Muslims",0.787996
-"Laos","Other",0.530574
-"Latvia","Christians",0.503808
-"Lebanon","Muslims",0.523058
-"Lesotho","Christians",0.938585
-"Liberia","Christians",0.752977
-"Libya","Muslims",0.934485
-"Liechtenstein","Christians",0.848402
-"Lithuania","Christians",0.817004
-"Luxembourg","Christians",0.568469
-"Macau","Other",0.40615
-"Madagascar (Malagasy)","Christians",0.735695
-"Malawi","Christians",0.702143
-"Malaysia","Muslims",0.450363
-"Maldives","Muslims",0.968956
-"Mali","Muslims",0.892941
-"Malta","Christians",0.942125
-"Marshall Islands","Christians",0.95145
-"Martinique","Christians",0.932354
-"Mauritania","Muslims",0.9808
-"Mauritius","Other",0.372583
-"Mayotte","Muslims",0.972896
-"Mexico","Christians",0.90721
-"Moldova","Christians",0.949472
-"Monaco","Christians",0.754078
-"Mongolia","Other",0.43556
-"Montenegro","Christians",0.646454
-"Montserrat","Christians",0.877254
-"Morocco","Muslims",0.9808
-"Mozambique","Christians",0.391806
-"Namibia","Christians",0.951586
-"Nauru","Christians",0.638583
-"Nepal","Other",0.665743
-"Netherlands","Christians",0.437377
-"New Caledonia","Christians",0.738004
-"New Zealand","Christians",0.459997
-"Nicaragua","Christians",0.752485
-"Niger","Muslims",0.968956
-"Nigeria","Christians",0.481889
-"Niue","Christians",0.930985
-"North Korea","Other",0.541064
-"Northern Mariana Islands","Christians",0.675535
-"Norway","Christians",0.729479
-"Oman","Muslims",0.745631
-"Pakistan","Muslims",0.930413
-"Palau","Christians",0.763149
-"Palestinian territories","Muslims",0.953752
-"Panama","Christians",0.867804
-"Papua New Guinea","Christians",0.9808
-"Paraguay","Christians",0.939871
-"Peru","Christians",0.913525
-"Philippines","Christians",0.861226
-"Poland","Christians",0.892985
-"Portugal","Christians",0.850786
-"Puerto Rico","Christians",0.93605
-"Qatar","Muslims",0.497778
-"Macedonia, FYR","Christians",0.506794
-"Republic of the Congo","Christians",0.74733
-"Reunion","Christians",0.771986
-"Romania","Christians",0.9808
-"Russia","Christians",0.574033
-"Rwanda","Christians",0.874476
-"Samoa","Christians",0.938249
-"San Marino","Christians",0.84484
-"Sao Tome and Principe","Christians",0.693377
-"Saudi Arabia","Muslims",0.867457
-"Senegal","Muslims",0.931192
-"Serbia (Yugoslavia)","Christians",0.860746
-"Seychelles","Christians",0.885003
-"Sierra Leone","Muslims",0.652681
-"Singapore","Other",0.208132
-"Sint Maarten","Christians",0.883454
-"Slovakia","Christians",0.748658
-"Slovenia","Christians",0.648852
-"Solomon Islands","Christians",0.949445
-"Somalia","Muslims",0.9808
-"South Africa","Christians",0.682355
-"South Korea","Other",0.354673
-"South Sudan","Christians",0.47861
-"Spain","Christians",0.654837
-"Sri Lanka","Other",0.514078
-"St. Helena","Christians",0.932914
-"St. Kitts and Nevis","Christians",0.895966
-"St. Lucia","Christians",0.834421
-"St. Pierre and Miquelon","Christians",0.898922
-"St. Vincent and the Grenadines","Christians",0.789775
-"Sudan","Muslims",0.826849
-"Suriname","Christians",0.334813
-"Kingdom of eSwatini (Swaziland)","Christians",0.786962
-"Sweden","Christians",0.5271
-"Switzerland","Christians",0.575111
-"Syria","Muslims",0.864788
-"Taiwan","Other",0.286431
-"Tajikistan","Muslims",0.93607
-"Tanzania","Christians",0.50182
-"Thailand","Other",0.872249
-"Timor-Leste","Christians",0.9808
-"Togo","Christians",0.341549
-"Tokelau","Christians",0.9808
-"Tonga","Christians",0.978821
-"Trinidad and Tobago","Christians",0.490409
-"Tunisia","Muslims",0.9808
-"Turkey","Muslims",0.961144
-"Turkmenistan","Muslims",0.869596
-"Turks and Caicos Islands","Christians",0.851586
-"Tuvalu","Christians",0.936119
-"U.S. Virgin Islands","Christians",0.900673
-"Uganda","Christians",0.765514
-"Ukraine","Christians",0.724497
-"UAE","Muslims",0.612414
-"United Kingdom","Christians",0.493633
-"United States","Christians",0.640853
-"Uruguay","Christians",0.50149
-"Uzbekistan","Muslims",0.936218
-"Vanuatu","Christians",0.87291
-"Vatican City","Christians",0.9808
-"Venezuela","Christians",0.808049
-"Vietnam","Other",0.326845
-"Wallis and Futuna","Christians",0.94942
-"Western Sahara","Muslims",0.9808
-"Yemen","Muslims",0.9808
-"Zambia","Christians",0.953276
-"Zimbabwe (Rhodesia)","Christians",0.765085
+"Afghanistan","Muslims",0.0192000000000001
+"Albania","Muslims",0.322095
+"Algeria","Muslims",0.0406349999999999
+"All Countries","religion_index",0.789462
+"American Samoa","Christians",0.0330110000000001
+"Andorra","Christians",0.190631
+"Angola","Christians",0.17611
+"Anguilla","Christians",0.176067
+"Antigua and Barbuda","Christians",0.133015
+"Argentina","Christians",0.258612
+"Armenia","Christians",0.0290060000000001
+"Aruba","Christians",0.15117
+"Australia","Christians",0.486706
+"Austria","Christians",0.331943
+"Azerbaijan","Muslims",0.0595389999999999
+"Bahamas","Christians",0.0768390000000001
+"Bahrain","Muslims",0.473876
+"Bangladesh","Muslims",0.174959
+"Barbados","Christians",0.092639
+"Belarus","Christians",0.41066
+"Belgium","Christians",0.499755
+"Belize","Christians",0.223978
+"Benin","religion_index",0.626795
+"Bermuda","Christians",0.398443
+"Bhutan","Other",0.390054
+"Bolivia","Christians",0.115998
+"Bosnia-Herzegovina","Christians",0.521042
+"Botswana","Christians",0.433623
+"Brazil","Christians",0.202154
+"British Virgin Islands","Christians",0.27681
+"Brunei","Muslims",0.415523
+"Bulgaria","Christians",0.304926
+"Burkina Faso","Muslims",0.545703
+"Myanmar","Other",0.346762
+"Burundi","Christians",0.158242
+"Cambodia (Kampuchea)","Other",0.060039
+"Cameroon","Christians",0.467375
+"Canada","Christians",0.46665
+"Cape Verde","Christians",0.197113
+"Caribbean Netherlands","Christians",0.116546
+"Cayman Islands","Christians",0.291414
+"Central African Republic","Christians",0.19115
+"Chad","Muslims",0.528134
+"Channel Islands","Christians",0.253332
+"Chile","Christians",0.192643
+"China","religion_index",0.643206
+"Colombia","Christians",0.139419
+"Comoros","Muslims",0.0330110000000001
+"Cook Islands","Christians",0.0767760000000001
+"Costa Rica","Christians",0.166878
+"Croatia","Christians",0.124347
+"Cuba","Christians",0.56586
+"Curacao","Christians",0.116546
+"Cyprus","Christians",0.399523
+"Czech Republic","Other",0.361415
+"Congo","Christians",0.0811870000000001
+"Denmark","Christians",0.28667
+"Djibouti","Muslims",0.0599099999999999
+"Dominica","Christians",0.107175
+"Dominican Republic","Christians",0.213119
+"Ecuador","Christians",0.110894
+"Egypt","Muslims",0.0961979999999999
+"El Salvador","Christians",0.209376
+"Equatorial Guinea","Christians",0.208442
+"Eritrea","Christians",0.469803
+"Estonia","Other",0.484983
+"Ethiopia","Christians",0.484724
+"Faeroe Islands","Christians",0.0387110000000002
+"Falkland Islands (Malvinas)","Christians",0.448591
+"Federated States of Micronesia","Christians",0.0904620000000002
+"Fiji","Christians",0.502954
+"Finland","Christians",0.321318
+"France","Christians",0.518575
+"French Guiana","Christians",0.277571
+"French Polynesia","Christians",0.113399
+"Gabon","Christians",0.395095
+"Gambia","Muslims",0.0929740000000001
+"Georgia","Christians",0.204726
+"Germany","Christians",0.463158
+"Ghana","Christians",0.40947
+"Gibraltar","Christians",0.20795
+"Greece","Christians",0.216809
+"Greenland","Christians",0.0752540000000002
+"Grenada","Christians",0.0660750000000001
+"Guadeloupe","Christians",0.0790939999999999
+"Guam","Christians",0.111445
+"Guatemala","Christians",0.0914149999999999
+"Guinea","Muslims",0.27433
+"Guinea-Bissau","religion_index",0.66006
+"Guyana","Christians",0.497503
+"Haiti","Christians",0.232619
+"Honduras","Christians",0.220978
+"Hong Kong","religion_index",0.630273
+"Hungary","Christians",0.308704
+"Iceland","Christians",0.0956750000000001
+"India","Other",0.345685
+"Indonesia","Muslims",0.229026
+"Iran","Muslims",0.0192000000000001
+"Iraq","Muslims",0.0192000000000001
+"Ireland","Christians",0.149135
+"Isle of Man","Christians",0.268403
+"Israel","Other",0.392107
+"Italy","Christians",0.288866
+"Ivory Coast","religion_index",0.64769
+"Jamaica","Christians",0.371907
+"Japan","Other",0.541191
+"Jordan","Muslims",0.0541320000000001
+"Kazakhstan","Muslims",0.441111
+"Kenya","Christians",0.270129
+"Kiribati","Christians",0.0580160000000001
+"Kosovo","Muslims",0.115835
+"Kuwait","Muslims",0.422061
+"Kyrgyzstan","Muslims",0.212004
+"Laos","Other",0.469426
+"Latvia","Christians",0.496192
+"Lebanon","Muslims",0.476942
+"Lesotho","Christians",0.0614150000000001
+"Liberia","Christians",0.247023
+"Libya","Muslims",0.065515
+"Liechtenstein","Christians",0.151598
+"Lithuania","Christians",0.182996
+"Luxembourg","Christians",0.431531
+"Macau","religion_index",0.59385
+"Madagascar (Malagasy)","Christians",0.264305
+"Malawi","Christians",0.297857
+"Malaysia","Muslims",0.549637
+"Maldives","Muslims",0.0310439999999998
+"Mali","Muslims",0.107059
+"Malta","Christians",0.0578750000000001
+"Marshall Islands","Christians",0.0485500000000001
+"Martinique","Christians",0.0676460000000001
+"Mauritania","Muslims",0.0192000000000001
+"Mauritius","religion_index",0.627417
+"Mayotte","Muslims",0.0271040000000001
+"Mexico","Christians",0.0927900000000002
+"Moldova","Christians",0.0505279999999999
+"Monaco","Christians",0.245922
+"Mongolia","religion_index",0.56444
+"Montenegro","Christians",0.353546
+"Montserrat","Christians",0.122746
+"Morocco","Muslims",0.0192000000000001
+"Mozambique","religion_index",0.608194
+"Namibia","Christians",0.0484140000000002
+"Nauru","Christians",0.361417
+"Nepal","Other",0.334257
+"Netherlands","religion_index",0.562623
+"New Caledonia","Christians",0.261996
+"New Zealand","Christians",0.540003
+"Nicaragua","Christians",0.247515
+"Niger","Muslims",0.0310439999999998
+"Nigeria","religion_index",0.518111
+"Niue","Christians",0.0690149999999999
+"North Korea","Other",0.458936
+"Northern Mariana Islands","Christians",0.324465
+"Norway","Christians",0.270521
+"Oman","Muslims",0.254369
+"Pakistan","Muslims",0.069587
+"Palau","Christians",0.236851
+"Palestinian territories","Muslims",0.0462480000000001
+"Panama","Christians",0.132196
+"Papua New Guinea","Christians",0.0192000000000001
+"Paraguay","Christians",0.0601289999999999
+"Peru","Christians",0.0864750000000001
+"Philippines","Christians",0.138774
+"Poland","Christians",0.107015
+"Portugal","Christians",0.149214
+"Puerto Rico","Christians",0.06395
+"Qatar","Muslims",0.502222
+"Macedonia, FYR","Christians",0.493206
+"Republic of the Congo","Christians",0.25267
+"Reunion","Christians",0.228014
+"Romania","Christians",0.0192000000000001
+"Russia","Christians",0.425967
+"Rwanda","Christians",0.125524
+"Samoa","Christians",0.0617510000000001
+"San Marino","Christians",0.15516
+"Sao Tome and Principe","Christians",0.306623
+"Saudi Arabia","Muslims",0.132543
+"Senegal","Muslims",0.0688079999999999
+"Serbia (Yugoslavia)","Christians",0.139254
+"Seychelles","Christians",0.114997
+"Sierra Leone","Muslims",0.347319
+"Singapore","religion_index",0.791868
+"Sint Maarten","Christians",0.116546
+"Slovakia","Christians",0.251342
+"Slovenia","Christians",0.351148
+"Solomon Islands","Christians",0.0505549999999999
+"Somalia","Muslims",0.0192000000000001
+"South Africa","Christians",0.317645
+"South Korea","religion_index",0.645327
+"South Sudan","Christians",0.52139
+"Spain","Christians",0.345163
+"Sri Lanka","Other",0.485922
+"St. Helena","Christians",0.0670860000000001
+"St. Kitts and Nevis","Christians",0.104034
+"St. Lucia","Christians",0.165579
+"St. Pierre and Miquelon","Christians",0.101078
+"St. Vincent and the Grenadines","Christians",0.210225
+"Sudan","Muslims",0.173151
+"Suriname","religion_index",0.665187
+"Kingdom of eSwatini (Swaziland)","Christians",0.213038
+"Sweden","Christians",0.4729
+"Switzerland","Christians",0.424889
+"Syria","Muslims",0.135212
+"Taiwan","religion_index",0.713569
+"Tajikistan","Muslims",0.0639299999999998
+"Tanzania","Christians",0.49818
+"Thailand","Other",0.127751
+"Timor-Leste","Christians",0.0192000000000001
+"Togo","religion_index",0.658451
+"Tokelau","Christians",0.0192000000000001
+"Tonga","Christians",0.0211789999999998
+"Trinidad and Tobago","Christians",0.509591
+"Tunisia","Muslims",0.0192000000000001
+"Turkey","Muslims",0.0388560000000001
+"Turkmenistan","Muslims",0.130404
+"Turks and Caicos Islands","Christians",0.148414
+"Tuvalu","Christians",0.063881
+"U.S. Virgin Islands","Christians",0.0993270000000002
+"Uganda","Christians",0.234486
+"Ukraine","Christians",0.275503
+"UAE","Muslims",0.387586
+"United Kingdom","Christians",0.506367
+"United States","Christians",0.359147
+"Uruguay","Christians",0.49851
+"Uzbekistan","Muslims",0.0637819999999999
+"Vanuatu","Christians",0.12709
+"Vatican City","Christians",0.0192000000000001
+"Venezuela","Christians",0.191951
+"Vietnam","religion_index",0.673155
+"Wallis and Futuna","Christians",0.0505799999999998
+"Western Sahara","Muslims",0.0192000000000001
+"Yemen","Muslims",0.0192000000000001
+"Zambia","Christians",0.0467240000000001
+"Zimbabwe (Rhodesia)","Christians",0.234915

@@ -38,8 +38,8 @@ df <- mutate_if(df, is.numeric, function(x) x / 100)
 
 # Index of fractionalisation
 df <- df %>% 
-  mutate(religion_index = Buddhists ^ 2 + Christians ^ 2 + Folk.Religions ^ 2 + 
-           Hindus ^ 2 + Jews ^ 2 + Muslims ^ 2 + Other.Religions ^ 2 + Unaffiliated ^ 2)
+  mutate(religion_index = 1 - (Buddhists ^ 2 + Christians ^ 2 + Folk.Religions ^ 2 + 
+           Hindus ^ 2 + Jews ^ 2 + Muslims ^ 2 + Other.Religions ^ 2 + Unaffiliated ^ 2))
 
 dx <- df %>%  
   pivot_longer(-country, names_to = "religion") %>% 
